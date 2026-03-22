@@ -22,6 +22,8 @@ function createMockPool() {
               data_type: "bigint",
               is_nullable: "NO",
               column_default: null,
+              is_primary_key: true,
+              is_unique: true,
             },
           ],
         };

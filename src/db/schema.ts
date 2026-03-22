@@ -10,6 +10,8 @@ export type ColumnSummary = {
   dataType: string;
   isNullable: boolean;
   defaultValue: string | null;
+  isPrimaryKey: boolean;
+  isUnique: boolean;
 };
 
 export type TableDescription = {
@@ -58,12 +60,40 @@ export async function describeTable(
     data_type: string;
     is_nullable: "YES" | "NO";
     column_default: string | null;
+    is_primary_key: boolean;
+    is_unique: boolean;
   }>(
     `
-      select column_name, data_type, is_nullable, column_default
-      from information_schema.columns
-      where table_schema = $1
-        and table_name = $2
+      select
+        c.column_name,
+        c.data_type,
+        c.is_nullable,
+        c.column_default,
+        exists (
+          select 1
+          from information_schema.table_constraints tc
+          join information_schema.key_column_usage kcu
+            on tc.constraint_name = kcu.constraint_name
+           and tc.table_schema = kcu.table_schema
+          where tc.constraint_type = 'PRIMARY KEY'
+            and tc.table_schema = c.table_schema
+            and tc.table_name = c.table_name
+            and kcu.column_name = c.column_name
+        ) as is_primary_key,
+        exists (
+          select 1
+          from information_schema.table_constraints tc
+          join information_schema.key_column_usage kcu
+            on tc.constraint_name = kcu.constraint_name
+           and tc.table_schema = kcu.table_schema
+          where tc.constraint_type in ('PRIMARY KEY', 'UNIQUE')
+            and tc.table_schema = c.table_schema
+            and tc.table_name = c.table_name
+            and kcu.column_name = c.column_name
+        ) as is_unique
+      from information_schema.columns c
+      where c.table_schema = $1
+        and c.table_name = $2
       order by ordinal_position
     `,
     [schemaName, tableName],
@@ -81,6 +111,8 @@ export async function describeTable(
       dataType: row.data_type,
       isNullable: row.is_nullable === "YES",
       defaultValue: row.column_default,
+      isPrimaryKey: row.is_primary_key,
+      isUnique: row.is_unique,
     })),
   };
 }
