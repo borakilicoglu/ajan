@@ -12,7 +12,7 @@ export function createAjanServer(
   options: CreateAjanServerOptions,
 ): McpServer {
   const server = new McpServer({
-    name: "ajan",
+    name: "ajan-sql",
     version: "0.1.0",
   });
 

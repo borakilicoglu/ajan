@@ -29,6 +29,6 @@ async function main(): Promise<void> {
 
 main().catch((error: unknown) => {
   const message = error instanceof Error ? error.message : String(error);
-  console.error(`[ajan] ${message}`);
+  console.error(`[ajan-sql] ${message}`);
   process.exit(1);
 });

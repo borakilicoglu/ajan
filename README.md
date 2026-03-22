@@ -1,10 +1,10 @@
-# ajan
+# ajan-sql
 
 AI-safe MCP server for schema-aware, read-only SQL access.
 
 ## Overview
 
-`ajan` is an npm package for running an MCP server over stdio with a PostgreSQL backend.
+`ajan-sql` is an npm package for running an MCP server over stdio with a PostgreSQL backend.
 
 The project is designed as:
 
@@ -79,9 +79,9 @@ For MCP clients that launch local stdio servers, point the command to the built 
 ```json
 {
   "mcpServers": {
-    "ajan": {
+    "ajan-sql": {
       "command": "node",
-      "args": ["/absolute/path/to/ajan/dist/index.js"],
+      "args": ["/absolute/path/to/ajan-sql/dist/index.js"],
       "env": {
         "DATABASE_URL": "postgres://USER:PASSWORD@HOST:PORT/DB"
       }
