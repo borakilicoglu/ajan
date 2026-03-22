@@ -21,6 +21,14 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/borakilicoglu/ajan-sql">GitHub Repository</a>
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/ajan-sql">npm Package</a>
+</p>
+
+<p align="center">
   AI-safe MCP server for schema-aware, read-only SQL access.
 </p>
 
