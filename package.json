@@ -4,6 +4,7 @@
   "description": "AI-safe MCP server for schema-aware, read-only SQL access.",
   "main": "dist/index.js",
   "scripts": {
+    "prepare": "husky",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -13,6 +14,7 @@
   "type": "commonjs",
   "devDependencies": {
     "@types/node": "^24.0.0",
+    "husky": "^9.1.7",
     "typescript": "^5.9.0",
     "vitest": "^3.2.0"
   }
