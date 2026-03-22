@@ -38,6 +38,17 @@ npm run docs:dev
 - Prefer simple working code over extra abstraction
 - Maintain readonly query safety rules
 
+## Commits
+
+Use conventional-style commit messages:
+
+- `feat: ...`
+- `fix: ...`
+- `chore: ...`
+- `docs: ...`
+- `test: ...`
+- `refactor: ...`
+
 ## Pull Requests
 
 Before opening a PR:
@@ -46,3 +57,7 @@ Before opening a PR:
 - run `npm run build`
 - update docs when behavior changes
 - keep the scope focused
+
+## Local Integration Tests
+
+The project may use local-only PostgreSQL integration setup during development. If you add local test assets, avoid committing machine-specific files unless they are intended to be shared project fixtures.
