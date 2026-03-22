@@ -28,6 +28,18 @@ function asTextResult(data: unknown) {
   };
 }
 
+function asStructuredResult<T>(summary: string, data: T) {
+  return {
+    content: [
+      {
+        type: "text" as const,
+        text: summary,
+      },
+    ],
+    structuredContent: data,
+  };
+}
+
 type DescribeTableArgs = {
   name: string;
   schema?: string;
@@ -78,7 +90,10 @@ export function registerSchemaTools(
         throw new Error(`Table not found: ${resolvedSchema}.${name}`);
       }
 
-      return asTextResult(description);
+      return asStructuredResult(
+        `Described table ${resolvedSchema}.${name} with ${description.columns.length} columns.`,
+        description,
+      );
     },
   );
 
@@ -103,7 +118,10 @@ export function registerSchemaTools(
     },
     async ({ sql }: SqlArgs) => {
       const result = await runReadonlyQuery(deps.pool, sql);
-      return asTextResult(result);
+      return asStructuredResult(
+        `Query returned ${result.rowCount} rows in ${result.durationMs}ms.`,
+        result,
+      );
     },
   );
 
@@ -117,7 +135,11 @@ export function registerSchemaTools(
     },
     async ({ sql }: SqlArgs) => {
       const result = await explainReadonlyQuery(deps.pool, sql);
-      return asTextResult(result);
+      const rootNode = result.summary?.nodeType ?? "unknown";
+      return asStructuredResult(
+        `Explain plan generated in ${result.durationMs}ms. Root node: ${rootNode}.`,
+        result,
+      );
     },
   );
 
