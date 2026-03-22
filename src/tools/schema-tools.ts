@@ -69,7 +69,10 @@ export function registerSchemaTools(
     },
     async () => {
       const tables = await listTables(deps.pool);
-      return asTextResult(tables);
+      return asStructuredResult(
+        `Listed ${tables.length} tables.`,
+        tables,
+      );
     },
   );
 
@@ -104,7 +107,10 @@ export function registerSchemaTools(
     },
     async () => {
       const relationships = await listRelationships(deps.pool);
-      return asTextResult(relationships);
+      return asStructuredResult(
+        `Listed ${relationships.length} foreign key relationships.`,
+        relationships,
+      );
     },
   );
 
@@ -163,7 +169,10 @@ export function registerSchemaTools(
         columns,
       );
 
-      return asTextResult(result);
+      return asStructuredResult(
+        `Sampled ${result.rowCount} rows from ${(schema ?? "public")}.${name} in ${result.durationMs}ms.`,
+        result,
+      );
     },
   );
 }

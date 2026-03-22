@@ -70,6 +70,13 @@ function createMockPool() {
           };
         }
 
+        if (sql.startsWith('SELECT "id" FROM')) {
+          return {
+            rows: [{ id: 1 }],
+            fields: [{ name: "id", dataTypeID: 20 }],
+          };
+        }
+
         if (sql.startsWith("EXPLAIN (FORMAT JSON) SELECT id FROM")) {
           return {
             rows: [
@@ -181,5 +188,44 @@ describe("createAjanServer", () => {
       totalCost: 1.01,
       childCount: 0,
     });
+  });
+
+  it("returns structured content for list and sample tools", async () => {
+    const server = createAjanServer({ pool: createMockPool() as any }) as any;
+
+    const tablesResult = await server._registeredTools["list_tables"].handler({});
+    expect(tablesResult.content[0].text).toContain("Listed 2 tables");
+    expect(tablesResult.structuredContent).toEqual([
+      { schema: "public", name: "users" },
+      { schema: "public", name: "posts" },
+    ]);
+
+    const relationshipsResult =
+      await server._registeredTools["list_relationships"].handler({});
+    expect(relationshipsResult.content[0].text).toContain(
+      "Listed 1 foreign key relationships",
+    );
+    expect(relationshipsResult.structuredContent).toEqual([
+      {
+        constraintName: "posts_user_id_fkey",
+        sourceSchema: "public",
+        sourceTable: "posts",
+        sourceColumn: "user_id",
+        targetSchema: "public",
+        targetTable: "users",
+        targetColumn: "id",
+      },
+    ]);
+
+    const sampleResult = await server._registeredTools["sample_rows"].handler({
+      name: "users",
+      schema: "public",
+      limit: 1,
+      columns: ["id"],
+    });
+    expect(sampleResult.content[0].text).toContain("Sampled 1 rows from public.users");
+    expect(sampleResult.structuredContent.rowCount).toBe(1);
+    expect(sampleResult.structuredContent.columns).toEqual([{ name: "id", dataTypeId: 20 }]);
+    expect(sampleResult.structuredContent.rows).toEqual([{ id: 1 }]);
   });
 });

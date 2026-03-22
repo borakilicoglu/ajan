@@ -2,8 +2,6 @@
   <img src="/cover.svg" alt="ajan-sql cover" width="860" />
 </p>
 
-# ajan-sql
-
 AI-safe MCP server for schema-aware, read-only SQL access.
 
 ## What It Does
