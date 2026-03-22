@@ -80,14 +80,23 @@ These rules should never be bypassed.
 
 ## Tool Matrix
 
-| Tool | Purpose | Inputs | Guarded |
-| --- | --- | --- | --- |
-| `list_tables` | List visible database tables | None | N/A |
-| `describe_table` | Describe columns and types for one table | `name`, optional `schema` | N/A |
-| `list_relationships` | List foreign key relationships | None | N/A |
-| `run_readonly_query` | Execute a readonly `SELECT` query | `sql` | Yes |
-| `explain_query` | Return JSON execution plan for a readonly query | `sql` | Yes |
-| `sample_rows` | Return a limited sample from a table | `name`, optional `schema`, optional `limit` | Yes |
+| Tool | Purpose | Inputs | Guarded | Structured Output |
+| --- | --- | --- | --- | --- |
+| `list_tables` | List visible database tables | None | N/A | `TableSummary[]` |
+| `describe_table` | Describe columns and types for one table | `name`, optional `schema` | N/A | `TableDescription` |
+| `list_relationships` | List foreign key relationships | None | N/A | `RelationshipSummary[]` |
+| `run_readonly_query` | Execute a readonly `SELECT` query | `sql` | Yes | `ReadonlyQueryResult` |
+| `explain_query` | Return JSON execution plan for a readonly query | `sql` | Yes | `ExplainQueryResult` |
+| `sample_rows` | Return a limited sample from a table | `name`, optional `schema`, optional `limit`, optional `columns` | Yes | `ReadonlyQueryResult` |
+
+## Structured Output
+
+All tools return:
+
+- `content` for a short human-readable summary
+- `structuredContent` for machine-friendly MCP client consumption
+
+Detailed payload examples are available in [docs/tools.md](./docs/tools.md).
 
 ## Available MCP Resources
 
@@ -187,7 +196,7 @@ The CLI will:
 
 ## Status
 
-Early development. Schema inspection, readonly query execution, query explain, and sample row tools are implemented. The CLI is published on npm, and current package version is `0.1.1`.
+Early development. Schema inspection, readonly query execution, query explain, and sample row tools are implemented. The CLI is published on npm, and current package version is `0.1.3`.
 
 ## License
 
