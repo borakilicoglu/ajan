@@ -3,7 +3,7 @@
   "version": "0.1.1",
   "description": "AI-safe MCP server for schema-aware, read-only SQL access.",
   "bin": {
-    "ajan-sql": "./dist/index.js"
+    "ajan-sql": "dist/index.js"
   },
   "files": [
     "dist",
@@ -34,6 +34,14 @@
   ],
   "author": "Bora Kilicoglu",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/borakilicoglu/ajan-sql"
+  },
+  "homepage": "https://github.com/borakilicoglu/ajan-sql#readme",
+  "bugs": {
+    "url": "https://github.com/borakilicoglu/ajan-sql/issues"
+  },
   "type": "commonjs",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.18.0",
