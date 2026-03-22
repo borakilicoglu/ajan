@@ -12,6 +12,13 @@ export type ColumnSummary = {
   defaultValue: string | null;
   isPrimaryKey: boolean;
   isUnique: boolean;
+  references: ColumnReference | null;
+};
+
+export type ColumnReference = {
+  schema: string;
+  table: string;
+  column: string;
 };
 
 export type TableDescription = {
@@ -62,6 +69,9 @@ export async function describeTable(
     column_default: string | null;
     is_primary_key: boolean;
     is_unique: boolean;
+    referenced_schema: string | null;
+    referenced_table: string | null;
+    referenced_column: string | null;
   }>(
     `
       select
@@ -90,8 +100,31 @@ export async function describeTable(
             and tc.table_schema = c.table_schema
             and tc.table_name = c.table_name
             and kcu.column_name = c.column_name
-        ) as is_unique
+        ) as is_unique,
+        fk.target_schema as referenced_schema,
+        fk.target_table as referenced_table,
+        fk.target_column as referenced_column
       from information_schema.columns c
+      left join (
+        select
+          tc.table_schema as source_schema,
+          tc.table_name as source_table,
+          kcu.column_name as source_column,
+          ccu.table_schema as target_schema,
+          ccu.table_name as target_table,
+          ccu.column_name as target_column
+        from information_schema.table_constraints tc
+        join information_schema.key_column_usage kcu
+          on tc.constraint_name = kcu.constraint_name
+         and tc.table_schema = kcu.table_schema
+        join information_schema.constraint_column_usage ccu
+          on ccu.constraint_name = tc.constraint_name
+         and ccu.table_schema = tc.table_schema
+        where tc.constraint_type = 'FOREIGN KEY'
+      ) fk
+        on fk.source_schema = c.table_schema
+       and fk.source_table = c.table_name
+       and fk.source_column = c.column_name
       where c.table_schema = $1
         and c.table_name = $2
       order by ordinal_position
@@ -113,6 +146,14 @@ export async function describeTable(
       defaultValue: row.column_default,
       isPrimaryKey: row.is_primary_key,
       isUnique: row.is_unique,
+      references:
+        row.referenced_schema && row.referenced_table && row.referenced_column
+          ? {
+              schema: row.referenced_schema,
+              table: row.referenced_table,
+              column: row.referenced_column,
+            }
+          : null,
     })),
   };
 }

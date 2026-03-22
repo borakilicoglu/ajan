@@ -17,7 +17,7 @@ Returns all visible base tables outside PostgreSQL system schemas.
 
 ## `describe_table`
 
-Returns column names, types, nullability, default values, and basic key metadata for a table.
+Returns column names, types, nullability, default values, basic key metadata, and foreign key reference metadata for a table.
 
 Inputs:
 

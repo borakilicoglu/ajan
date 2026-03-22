@@ -24,6 +24,9 @@ function createMockPool() {
               column_default: null,
               is_primary_key: true,
               is_unique: true,
+              referenced_schema: null,
+              referenced_table: null,
+              referenced_column: null,
             },
           ],
         };
