@@ -2,16 +2,33 @@
   "name": "ajan",
   "version": "0.1.0",
   "description": "AI-safe MCP server for schema-aware, read-only SQL access.",
+  "bin": {
+    "ajan": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsx src/index.ts",
+    "prepublishOnly": "npm run build && npm test",
     "prepare": "husky",
     "start": "node dist/index.js",
     "test": "vitest run",
     "test:watch": "vitest"
   },
-  "keywords": [],
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "postgres",
+    "postgresql",
+    "sql",
+    "ai",
+    "cli"
+  ],
   "author": "Bora Kilicoglu",
   "license": "MIT",
   "type": "commonjs",

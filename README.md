@@ -72,17 +72,27 @@ npm run build
 DATABASE_URL=postgres://USER:PASSWORD@HOST:PORT/DB npm start
 ```
 
-## Local Test Database
+## Client Configuration
 
-A local-only Docker setup can be used for integration testing during development:
+For MCP clients that launch local stdio servers, point the command to the built CLI and provide `DATABASE_URL`:
 
-```bash
-docker compose -f docker-compose.local.yml up -d
-DATABASE_URL=postgres://ajan:ajan@127.0.0.1:54329/ajan_test npx vitest run --config vitest.local.config.ts
-docker compose -f docker-compose.local.yml down
+```json
+{
+  "mcpServers": {
+    "ajan": {
+      "command": "node",
+      "args": ["/absolute/path/to/ajan/dist/index.js"],
+      "env": {
+        "DATABASE_URL": "postgres://USER:PASSWORD@HOST:PORT/DB"
+      }
+    }
+  }
+}
 ```
 
-These files are intentionally kept local and are not part of the Git-tracked project files.
+## Integration Testing
+
+The repository supports local PostgreSQL integration testing during development, but any Docker compose files or seeded local test databases can remain untracked and machine-local.
 
 ## Development Principles
 
@@ -104,7 +114,7 @@ The CLI will:
 
 ## Status
 
-Early development. Schema inspection, readonly query execution, query explain, and sample row tools are implemented. Current package version is `0.1.0`.
+Early development. Schema inspection, readonly query execution, query explain, and sample row tools are implemented. The CLI is publish-ready for npm packaging, and current package version is `0.1.0`.
 
 ## License
 
