@@ -1,4 +1,4 @@
-import type { QueryResultRow } from "pg";
+import type { FieldDef, QueryResultRow } from "pg";
 
 import type { DbPool } from "../db/pool";
 import { describeTable } from "../db/schema";
@@ -14,12 +14,20 @@ type JsonRecord = Record<string, unknown>;
 export type ReadonlyQueryResult = {
   sql: string;
   rowCount: number;
+  durationMs: number;
+  columns: QueryColumn[];
   rows: JsonRecord[];
 };
 
 export type ExplainQueryResult = {
   sql: string;
+  durationMs: number;
   plan: unknown;
+};
+
+export type QueryColumn = {
+  name: string;
+  dataTypeId: number;
 };
 
 export async function runReadonlyQuery(
@@ -36,6 +44,8 @@ export async function runReadonlyQuery(
   return {
     sql: guarded.sql,
     rowCount: result.rows.length,
+    durationMs: result.durationMs,
+    columns: result.fields.map(toQueryColumn),
     rows: result.rows as JsonRecord[],
   };
 }
@@ -51,6 +61,7 @@ export async function explainReadonlyQuery(
 
   return {
     sql: guarded.sql,
+    durationMs: result.durationMs,
     plan,
   };
 }
@@ -106,19 +117,30 @@ async function executeWithReadonlySettings(
   timeoutMs: number,
 ) {
   const client = await pool.connect();
+  const startedAt = Date.now();
 
   try {
     await client.query("BEGIN");
     await client.query(`SET LOCAL statement_timeout = '${timeoutMs}ms'`);
     const result = await client.query(sql);
     await client.query("ROLLBACK");
-    return result;
+    return {
+      ...result,
+      durationMs: Date.now() - startedAt,
+    };
   } catch (error) {
     await client.query("ROLLBACK").catch(() => undefined);
     throw error;
   } finally {
     client.release();
   }
+}
+
+function toQueryColumn(field: FieldDef): QueryColumn {
+  return {
+    name: field.name,
+    dataTypeId: field.dataTypeID,
+  };
 }
 
 function assertRowCount(rowCount: number, limit: number): void {

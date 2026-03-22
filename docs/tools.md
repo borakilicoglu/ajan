@@ -30,7 +30,7 @@ Returns foreign key relationships across the database schema.
 
 ## `run_readonly_query`
 
-Runs a guarded `SELECT` query and returns rows.
+Runs a guarded `SELECT` query and returns rows, column metadata, and execution timing.
 
 Inputs:
 
@@ -38,7 +38,7 @@ Inputs:
 
 ## `explain_query`
 
-Runs `EXPLAIN (FORMAT JSON)` for a guarded readonly query.
+Runs `EXPLAIN (FORMAT JSON)` for a guarded readonly query and includes execution timing.
 
 Inputs:
 

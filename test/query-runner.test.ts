@@ -9,10 +9,18 @@ import {
 function createMockPool(rows: unknown[]) {
   const query = vi.fn(async (sql: string) => {
     if (sql === "BEGIN" || sql.startsWith("SET LOCAL") || sql === "ROLLBACK") {
-      return { rows: [] };
+      return { rows: [], fields: [] };
     }
 
-    return { rows };
+    return {
+      rows,
+      fields: rows.length > 0
+        ? Object.keys(rows[0] as Record<string, unknown>).map((key) => ({
+            name: key,
+            dataTypeID: 25,
+          }))
+        : [],
+    };
   });
 
   const release = vi.fn();
@@ -64,6 +72,11 @@ describe("runReadonlyQuery", () => {
 
     expect(result.rowCount).toBe(1);
     expect(result.sql).toBe("select id, email from users LIMIT 100");
+    expect(result.durationMs).toEqual(expect.any(Number));
+    expect(result.columns).toEqual([
+      { name: "id", dataTypeId: 25 },
+      { name: "email", dataTypeId: 25 },
+    ]);
     expect(mock.connect).toHaveBeenCalledTimes(1);
     expect(mock.query).toHaveBeenNthCalledWith(1, "BEGIN");
     expect(mock.query).toHaveBeenNthCalledWith(
@@ -101,6 +114,7 @@ describe("explainReadonlyQuery", () => {
     );
 
     expect(result.sql).toBe("select * from users limit 5");
+    expect(result.durationMs).toEqual(expect.any(Number));
     expect(result.plan).toEqual([{ Plan: { Node: "Seq Scan" } }]);
     expect(mock.query).toHaveBeenNthCalledWith(
       3,
@@ -114,19 +128,23 @@ describe("sampleRows", () => {
     const mock = createMockPool([{ id: 1 }]);
     mock.query.mockImplementation(async (sql: string) => {
       if (sql === "BEGIN" || sql.startsWith("SET LOCAL") || sql === "ROLLBACK") {
-        return { rows: [] };
+        return { rows: [], fields: [] };
       }
 
       if (sql.includes("from information_schema.columns")) {
-        return { rows: createDescribeTableRows() };
+        return { rows: createDescribeTableRows(), fields: [] };
       }
 
-      return { rows: [{ id: 1 }] };
+      return {
+        rows: [{ id: 1 }],
+        fields: [{ name: "id", dataTypeID: 20 }],
+      };
     });
 
     const result = await sampleRows(mock.pool as any, "users", "public", 5);
 
     expect(result.sql).toBe('SELECT * FROM "public"."users" ORDER BY "id" LIMIT 5');
+    expect(result.columns).toEqual([{ name: "id", dataTypeId: 20 }]);
     expect(mock.query.mock.calls.map((call) => call[0])).toContain(
       'SELECT * FROM "public"."users" ORDER BY "id" LIMIT 5',
     );
@@ -136,14 +154,17 @@ describe("sampleRows", () => {
     const mock = createMockPool([{ email: "ada@example.com" }]);
     mock.query.mockImplementation(async (sql: string) => {
       if (sql === "BEGIN" || sql.startsWith("SET LOCAL") || sql === "ROLLBACK") {
-        return { rows: [] };
+        return { rows: [], fields: [] };
       }
 
       if (sql.includes("from information_schema.columns")) {
-        return { rows: createDescribeTableRows() };
+        return { rows: createDescribeTableRows(), fields: [] };
       }
 
-      return { rows: [{ email: "ada@example.com" }] };
+      return {
+        rows: [{ email: "ada@example.com" }],
+        fields: [{ name: "email", dataTypeID: 25 }],
+      };
     });
 
     const result = await sampleRows(
@@ -155,16 +176,17 @@ describe("sampleRows", () => {
     );
 
     expect(result.sql).toBe('SELECT "email" FROM "public"."users" ORDER BY "id" LIMIT 3');
+    expect(result.columns).toEqual([{ name: "email", dataTypeId: 25 }]);
   });
 
   it("rejects unknown selected columns", async () => {
     const mock = createMockPool([]);
     mock.query.mockImplementation(async (sql: string) => {
       if (sql.includes("from information_schema.columns")) {
-        return { rows: createDescribeTableRows() };
+        return { rows: createDescribeTableRows(), fields: [] };
       }
 
-      return { rows: [] };
+      return { rows: [], fields: [] };
     });
 
     await expect(
