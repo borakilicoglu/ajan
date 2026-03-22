@@ -5,9 +5,6 @@ hero:
   name: "ajan-sql"
   text: "AI-safe MCP server for schema-aware, read-only SQL access."
   tagline: "Run a PostgreSQL-backed MCP server over stdio with guarded queries, schema discovery, and structured tool outputs for AI workflows."
-  image:
-    src: /cover.svg
-    alt: ajan-sql cover
   actions:
     - theme: brand
       text: Get Started
