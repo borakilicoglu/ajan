@@ -1,15 +1,7 @@
 ## What's Changed
 
-- Initial public release of `ajan-sql`
-- Added schema inspection tools:
-  - `list_tables`
-  - `describe_table`
-  - `list_relationships`
-- Added guarded readonly query execution:
-  - `run_readonly_query`
-  - `explain_query`
-  - `sample_rows`
-- Added PostgreSQL-backed MCP resources:
-  - `schema://snapshot`
-  - `schema://table/{name}`
-- Added VitePress documentation and GitHub Actions workflows
+- Added VitePress docs site and GitHub Pages workflow
+- Added package metadata and workflow updates for ongoing npm releases
+- Improved README and docs install guidance for global npm usage
+- Added discoverable schema table resources and server registration coverage
+- Added project cover artwork and repository link cleanup after the repo rename

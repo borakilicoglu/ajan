@@ -29,13 +29,40 @@ AI-safe MCP server for schema-aware, read-only SQL access.
 - `schema://snapshot`
 - `schema://table/{name}`
 
-## Local Run
+## Install
+
+```bash
+npm install -g ajan-sql
+```
+
+## Run
+
+```bash
+DATABASE_URL=postgres://USER:PASSWORD@HOST:PORT/DB ajan-sql
+```
+
+## Local Development
 
 ```bash
 DATABASE_URL=postgres://USER:PASSWORD@HOST:PORT/DB npm run dev
 ```
 
 ## Client Example
+
+```json
+{
+  "mcpServers": {
+    "ajan-sql": {
+      "command": "ajan-sql",
+      "env": {
+        "DATABASE_URL": "postgres://USER:PASSWORD@HOST:PORT/DB"
+      }
+    }
+  }
+}
+```
+
+## Client Example For Local Repo Builds
 
 ```json
 {

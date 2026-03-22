@@ -1,5 +1,16 @@
 # Tools
 
+## Tool Matrix
+
+| Tool | Purpose | Inputs | Guarded |
+| --- | --- | --- | --- |
+| `list_tables` | List visible database tables | None | N/A |
+| `describe_table` | Describe columns and types for one table | `name`, optional `schema` | N/A |
+| `list_relationships` | List foreign key relationships | None | N/A |
+| `run_readonly_query` | Execute a readonly `SELECT` query | `sql` | Yes |
+| `explain_query` | Return JSON execution plan for a readonly query | `sql` | Yes |
+| `sample_rows` | Return a limited sample from a table | `name`, optional `schema`, optional `limit` | Yes |
+
 ## `list_tables`
 
 Returns all visible base tables outside PostgreSQL system schemas.

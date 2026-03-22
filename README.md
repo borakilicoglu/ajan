@@ -82,12 +82,37 @@ These rules should never be bypassed.
 - `explain_query`
 - `sample_rows`
 
+## Tool Matrix
+
+| Tool | Purpose | Inputs | Guarded |
+| --- | --- | --- | --- |
+| `list_tables` | List visible database tables | None | N/A |
+| `describe_table` | Describe columns and types for one table | `name`, optional `schema` | N/A |
+| `list_relationships` | List foreign key relationships | None | N/A |
+| `run_readonly_query` | Execute a readonly `SELECT` query | `sql` | Yes |
+| `explain_query` | Return JSON execution plan for a readonly query | `sql` | Yes |
+| `sample_rows` | Return a limited sample from a table | `name`, optional `schema`, optional `limit` | Yes |
+
 ## Available MCP Resources
 
 - `schema://snapshot`
 - `schema://table/{name}`
 
-## Local Usage
+## Install
+
+Install the CLI globally from npm:
+
+```bash
+npm install -g ajan-sql
+```
+
+Run it with a PostgreSQL connection string:
+
+```bash
+DATABASE_URL=postgres://USER:PASSWORD@HOST:PORT/DB ajan-sql
+```
+
+## Local Development
 
 Start the server with a PostgreSQL connection string:
 
@@ -104,7 +129,22 @@ DATABASE_URL=postgres://USER:PASSWORD@HOST:PORT/DB npm start
 
 ## Client Configuration
 
-For MCP clients that launch local stdio servers, point the command to the built CLI and provide `DATABASE_URL`:
+For MCP clients that launch globally installed stdio servers:
+
+```json
+{
+  "mcpServers": {
+    "ajan-sql": {
+      "command": "ajan-sql",
+      "env": {
+        "DATABASE_URL": "postgres://USER:PASSWORD@HOST:PORT/DB"
+      }
+    }
+  }
+}
+```
+
+For repository-local development builds, point the command to the built CLI and provide `DATABASE_URL`:
 
 ```json
 {
@@ -144,7 +184,7 @@ The CLI will:
 
 ## Status
 
-Early development. Schema inspection, readonly query execution, query explain, and sample row tools are implemented. The CLI is publish-ready for npm packaging, and current package version is `0.1.0`.
+Early development. Schema inspection, readonly query execution, query explain, and sample row tools are implemented. The CLI is published on npm, and current package version is `0.1.1`.
 
 ## License
 
