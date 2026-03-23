@@ -4,7 +4,7 @@ layout: home
 hero:
   name: "ajan-sql"
   text: "AI-safe MCP server for schema-aware, read-only SQL access."
-  tagline: "Run a PostgreSQL or MySQL-backed MCP server over stdio with guarded queries, schema discovery, and structured tool outputs for AI workflows."
+  tagline: "Run a multi-dialect SQL MCP server over stdio with guarded queries, schema discovery, and structured tool outputs for AI workflows."
   actions:
     - theme: brand
       text: Get Started
@@ -24,7 +24,7 @@ features:
   - title: MCP Native
     details: Expose tools and resources over stdio with structured outputs that work cleanly in LLM and AI client workflows.
   - title: Dialect Ready
-    details: PostgreSQL is the most mature path today, and initial MySQL support now runs through the same MCP surface via the dialect interface.
+    details: PostgreSQL and MySQL now run through the same MCP surface, with the dialect interface ready for future SQL adapters.
   - title: Explain and Sample
     details: Return explain plans, query summaries, and representative sample rows with predictable, constrained behavior.
   - title: Simple to Run

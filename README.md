@@ -36,13 +36,13 @@
 
 `ajan-sql` is an npm package for running an MCP server over stdio with SQL database backends.
 
-The project is currently PostgreSQL-first with initial MySQL support, and the internal architecture now includes a database dialect interface so additional backends can be added without rewriting the MCP surface.
+The project now provides multi-dialect SQL support, with PostgreSQL and MySQL available behind the same MCP surface and a dialect interface ready for future adapters.
 
 ## Goals
 
 - Safe, read-only database access for AI agents
 - Schema inspection and table discovery
-- Reliable PostgreSQL query execution with strict guardrails
+- Reliable read-only SQL query execution with strict guardrails
 - Simple, maintainable implementation
 
 ## Tech Stack
@@ -184,7 +184,7 @@ For repository-local development builds, point the command to the built CLI and 
 
 ## Integration Testing
 
-The repository supports local PostgreSQL integration testing during development, but any Docker compose files or seeded local test databases can remain untracked and machine-local.
+The repository supports local integration testing during development, but any Docker compose files or seeded local test databases can remain untracked and machine-local.
 
 ## Project Docs
 
@@ -213,7 +213,7 @@ The CLI will:
 
 ## Status
 
-Early development. PostgreSQL support is the most mature path today, and initial MySQL support is now available through the dialect interface. The CLI is published on npm, and current package version is `0.1.5`.
+Early development. The CLI now supports PostgreSQL and MySQL through a shared dialect-based architecture, and the current package version is `0.1.5`.
 
 ## License
 

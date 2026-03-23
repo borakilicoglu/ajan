@@ -16,7 +16,7 @@
 - Better release automation
 - More integration scenarios
 - Safer and clearer query validation feedback
-- Finish PostgreSQL-first cleanup around the dialect abstraction
+- Continue cleanup around the new multi-dialect abstraction
 
 ### 0.2.0
 
