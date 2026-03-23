@@ -1,5 +1,6 @@
 ## What's Changed
 
-- Added table index metadata to `describe_table`
-- Enriched `list_tables` with table comments and estimated row counts
-- Expanded tool documentation for the richer schema metadata
+- Added initial MySQL dialect support with `mysql2`
+- Added `DATABASE_DIALECT=mysql` runtime and configuration support
+- Added MySQL usage examples to README and docs
+- Fixed MySQL schema introspection aliases after real Docker-based validation

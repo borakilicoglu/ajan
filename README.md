@@ -213,7 +213,7 @@ The CLI will:
 
 ## Status
 
-Early development. PostgreSQL support is the most mature path today, and initial MySQL support is now available through the dialect interface. The CLI is published on npm, and current package version is `0.1.4`.
+Early development. PostgreSQL support is the most mature path today, and initial MySQL support is now available through the dialect interface. The CLI is published on npm, and current package version is `0.1.5`.
 
 ## License
 

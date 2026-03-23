@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.5
+
+- Added initial MySQL dialect support with `mysql2`
+- Added `DATABASE_DIALECT=mysql` runtime and configuration support
+- Added MySQL usage examples to README and docs
+- Fixed MySQL schema introspection aliases after real Docker-based validation
+
 ## 0.1.4
 
 - Added table index metadata to `describe_table`
