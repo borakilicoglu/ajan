@@ -1,32 +1,11 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
-import {
-  describeTable,
-  listRelationships,
-  listTables,
-} from "../db/schema";
-import type { DbPool } from "../db/pool";
-import {
-  explainReadonlyQuery,
-  runReadonlyQuery,
-  sampleRows,
-} from "../query-runner";
+import type { DatabaseDialect } from "../dialects/types";
 
 type SchemaToolDeps = {
-  pool: DbPool;
+  dialect: DatabaseDialect;
 };
-
-function asTextResult(data: unknown) {
-  return {
-    content: [
-      {
-        type: "text" as const,
-        text: JSON.stringify(data, null, 2),
-      },
-    ],
-  };
-}
 
 function asStructuredResult<T>(summary: string, data: T) {
   return {
@@ -68,7 +47,7 @@ export function registerSchemaTools(
       description: "Return all tables in the database.",
     },
     async () => {
-      const tables = await listTables(deps.pool);
+      const tables = await deps.dialect.listTables();
       return asStructuredResult(
         `Listed ${tables.length} tables.`,
         tables,
@@ -87,7 +66,7 @@ export function registerSchemaTools(
     },
     async ({ name, schema }: DescribeTableArgs) => {
       const resolvedSchema = schema ?? "public";
-      const description = await describeTable(deps.pool, name, resolvedSchema);
+      const description = await deps.dialect.describeTable(name, resolvedSchema);
 
       if (!description) {
         throw new Error(`Table not found: ${resolvedSchema}.${name}`);
@@ -106,7 +85,7 @@ export function registerSchemaTools(
       description: "Return foreign key relationships.",
     },
     async () => {
-      const relationships = await listRelationships(deps.pool);
+      const relationships = await deps.dialect.listRelationships();
       return asStructuredResult(
         `Listed ${relationships.length} foreign key relationships.`,
         relationships,
@@ -123,7 +102,7 @@ export function registerSchemaTools(
       },
     },
     async ({ sql }: SqlArgs) => {
-      const result = await runReadonlyQuery(deps.pool, sql);
+      const result = await deps.dialect.runReadonlyQuery(sql);
       return asStructuredResult(
         `Query returned ${result.rowCount} rows in ${result.durationMs}ms.`,
         result,
@@ -140,7 +119,7 @@ export function registerSchemaTools(
       },
     },
     async ({ sql }: SqlArgs) => {
-      const result = await explainReadonlyQuery(deps.pool, sql);
+      const result = await deps.dialect.explainReadonlyQuery(sql);
       const rootNode = result.summary?.nodeType ?? "unknown";
       return asStructuredResult(
         `Explain plan generated in ${result.durationMs}ms. Root node: ${rootNode}.`,
@@ -161,8 +140,7 @@ export function registerSchemaTools(
       },
     },
     async ({ name, schema, limit, columns }: SampleRowsArgs) => {
-      const result = await sampleRows(
-        deps.pool,
+      const result = await deps.dialect.sampleRows(
         name,
         schema ?? "public",
         limit ?? 10,

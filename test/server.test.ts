@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
+import type { DatabaseDialect } from "../src/dialects/types";
 import { createAjanServer } from "../src/server";
 
 function createMockPool() {
@@ -131,6 +132,43 @@ function createMockPool() {
 }
 
 describe("createAjanServer", () => {
+  it("accepts an injected dialect", async () => {
+    const dialect: DatabaseDialect = {
+      name: "test",
+      listTables: vi.fn(async () => []),
+      describeTable: vi.fn(async () => null),
+      listRelationships: vi.fn(async () => []),
+      runReadonlyQuery: vi.fn(async () => ({
+        sql: "SELECT 1 LIMIT 1",
+        rowCount: 1,
+        durationMs: 1,
+        columns: [{ name: "value", dataTypeId: 23 }],
+        rows: [{ value: 1 }],
+      })),
+      explainReadonlyQuery: vi.fn(async () => ({
+        sql: "SELECT 1 LIMIT 1",
+        durationMs: 1,
+        summary: null,
+        plan: [],
+      })),
+      sampleRows: vi.fn(async () => ({
+        sql: 'SELECT * FROM "public"."users" LIMIT 1',
+        rowCount: 0,
+        durationMs: 1,
+        columns: [],
+        rows: [],
+      })),
+    };
+
+    const server = createAjanServer({ dialect }) as any;
+    const result = await server._registeredTools["run_readonly_query"].handler({
+      sql: "SELECT 1",
+    });
+
+    expect(dialect.runReadonlyQuery).toHaveBeenCalledWith("SELECT 1");
+    expect(result.structuredContent.rowCount).toBe(1);
+  });
+
   it("registers all MCP tools", () => {
     const server = createAjanServer({ pool: createMockPool() as any }) as any;
 

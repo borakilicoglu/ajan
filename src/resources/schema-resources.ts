@@ -1,15 +1,10 @@
 import { ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
-import {
-  describeTable,
-  listRelationships,
-  listTables,
-} from "../db/schema";
-import type { DbPool } from "../db/pool";
+import type { DatabaseDialect } from "../dialects/types";
 
 type SchemaResourceDeps = {
-  pool: DbPool;
+  dialect: DatabaseDialect;
 };
 
 export function registerSchemaResources(
@@ -25,8 +20,8 @@ export function registerSchemaResources(
     },
     async (uri) => {
       const [tables, relationships] = await Promise.all([
-        listTables(deps.pool),
-        listRelationships(deps.pool),
+        deps.dialect.listTables(),
+        deps.dialect.listRelationships(),
       ]);
 
       return {
@@ -45,7 +40,7 @@ export function registerSchemaResources(
     "schema-table",
     new ResourceTemplate("schema://table/{name}", {
       list: async () => {
-        const tables = await listTables(deps.pool);
+        const tables = await deps.dialect.listTables();
 
         return {
           resources: tables.map((table) => ({
@@ -56,7 +51,7 @@ export function registerSchemaResources(
       },
       complete: {
         name: async (value) => {
-          const tables = await listTables(deps.pool);
+          const tables = await deps.dialect.listTables();
 
           return tables
             .map((table) => table.name)
@@ -75,7 +70,7 @@ export function registerSchemaResources(
         throw new Error("Table name is required");
       }
 
-      const description = await describeTable(deps.pool, tableName);
+      const description = await deps.dialect.describeTable(tableName);
 
       if (!description) {
         throw new Error(`Table not found: ${tableName}`);
