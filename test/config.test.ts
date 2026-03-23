@@ -31,13 +31,21 @@ describe("config", () => {
     expect(getAppConfig().databaseDialect).toBe("mysql");
   });
 
+  it("accepts sqlite as a supported DATABASE_DIALECT", () => {
+    vi.unstubAllEnvs();
+    vi.stubEnv("DATABASE_URL", "file:/tmp/ajan.db");
+    vi.stubEnv("DATABASE_DIALECT", "sqlite");
+
+    expect(getAppConfig().databaseDialect).toBe("sqlite");
+  });
+
   it("rejects an unsupported DATABASE_DIALECT", () => {
     vi.unstubAllEnvs();
     vi.stubEnv("DATABASE_URL", "postgres://localhost/test");
-    vi.stubEnv("DATABASE_DIALECT", "sqlite");
+    vi.stubEnv("DATABASE_DIALECT", "oracle");
 
     expect(() => getAppConfig()).toThrow(
-      "Unsupported DATABASE_DIALECT: sqlite. Supported values: postgres, mysql",
+      "Unsupported DATABASE_DIALECT: oracle. Supported values: postgres, mysql, sqlite",
     );
   });
 

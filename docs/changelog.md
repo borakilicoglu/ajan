@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.6
+
+- Added initial SQLite dialect support with `better-sqlite3`
+- Added `DATABASE_DIALECT=sqlite` runtime and configuration support
+- Added SQLite unit coverage for schema discovery, guarded queries, sampling, and explain output
+- Updated README and docs for PostgreSQL, MySQL, and SQLite usage
+
 ## 0.1.5
 
 - Added initial MySQL dialect support with `mysql2`

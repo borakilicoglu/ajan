@@ -36,7 +36,7 @@
 
 `ajan-sql` is an npm package for running an MCP server over stdio with SQL database backends.
 
-The project now provides multi-dialect SQL support, with PostgreSQL and MySQL available behind the same MCP surface and a dialect interface ready for future adapters.
+The project now provides multi-dialect SQL support, with PostgreSQL, MySQL, and SQLite available behind the same MCP surface.
 
 ## Goals
 
@@ -52,6 +52,7 @@ The project now provides multi-dialect SQL support, with PostgreSQL and MySQL av
 - MCP TypeScript SDK v1.x
 - PostgreSQL via `pg`
 - MySQL via `mysql2`
+- SQLite via `better-sqlite3`
 
 ## Security Model
 
@@ -114,7 +115,7 @@ Install the CLI globally from npm:
 npm install -g ajan-sql
 ```
 
-Run it with a PostgreSQL or MySQL connection string:
+Run it with a PostgreSQL, MySQL, or SQLite connection target:
 
 ```bash
 DATABASE_DIALECT=postgres \
@@ -128,11 +129,18 @@ DATABASE_DIALECT=mysql \
 DATABASE_URL=mysql://USER:PASSWORD@HOST:PORT/DB ajan-sql
 ```
 
-`DATABASE_DIALECT` defaults to `postgres`. Supported values today are `postgres` and `mysql`.
+SQLite example:
+
+```bash
+DATABASE_DIALECT=sqlite \
+DATABASE_URL=file:/absolute/path/to/database.sqlite ajan-sql
+```
+
+`DATABASE_DIALECT` defaults to `postgres`. Supported values today are `postgres`, `mysql`, and `sqlite`.
 
 ## Local Development
 
-Start the server with a PostgreSQL or MySQL connection string:
+Start the server with a PostgreSQL, MySQL, or SQLite connection target:
 
 ```bash
 DATABASE_DIALECT=postgres \
@@ -145,6 +153,13 @@ Or build and run the compiled server:
 npm run build
 DATABASE_DIALECT=postgres \
 DATABASE_URL=postgres://USER:PASSWORD@HOST:PORT/DB npm start
+```
+
+SQLite development example:
+
+```bash
+DATABASE_DIALECT=sqlite \
+DATABASE_URL=file:/absolute/path/to/database.sqlite npm run dev
 ```
 
 ## Client Configuration
@@ -213,7 +228,7 @@ The CLI will:
 
 ## Status
 
-Early development. The CLI now supports PostgreSQL and MySQL through a shared dialect-based architecture, and the current package version is `0.1.5`.
+Early development. The CLI now supports PostgreSQL, MySQL, and SQLite through a shared dialect-based architecture, and the current package version is `0.1.6`.
 
 ## License
 

@@ -5,8 +5,10 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { getAppConfig } from "./config";
 import { closeDbPool, createDbPool } from "./db/pool";
 import { closeMysqlPool, createMysqlPool } from "./db/mysql-pool";
+import { closeSqliteDatabase, createSqliteDatabase } from "./db/sqlite-db";
 import { createMysqlDialect } from "./dialects/mysql";
 import { createPostgresDialect } from "./dialects/postgres";
+import { createSqliteDialect } from "./dialects/sqlite";
 import { createAjanServer } from "./server";
 
 async function main(): Promise<void> {
@@ -24,6 +26,16 @@ async function main(): Promise<void> {
     server = createAjanServer({ dialect });
     shutdown = async () => {
       await closeMysqlPool(pool);
+      process.exit(0);
+    };
+  } else if (config.databaseDialect === "sqlite") {
+    const database = createSqliteDatabase({
+      filename: config.databaseUrl,
+    });
+    const dialect = createSqliteDialect(database);
+    server = createAjanServer({ dialect });
+    shutdown = async () => {
+      closeSqliteDatabase(database);
       process.exit(0);
     };
   } else {

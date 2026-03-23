@@ -18,11 +18,11 @@ All tools return both:
 - `content`: a short human-readable text summary
 - `structuredContent`: a machine-friendly payload for MCP clients
 
-Tool outputs are normalized across dialects. Field values such as data types, index names, explain plans, and row estimates may vary between PostgreSQL and MySQL.
+Tool outputs are normalized across dialects. Field values such as data types, index names, explain plans, and row estimates may vary between PostgreSQL, MySQL, and SQLite.
 
 ## `list_tables`
 
-Returns all visible base tables outside PostgreSQL system schemas, including table comments and PostgreSQL row-count estimates when available.
+Returns visible tables for the active dialect. PostgreSQL and MySQL include schema names; SQLite uses the main database namespace. Comments and row estimates are included when the active dialect can provide them.
 
 `structuredContent`:
 
@@ -44,7 +44,7 @@ Returns column names, types, nullability, default values, basic key metadata, fo
 Inputs:
 
 - `name`
-- `schema` optional, defaults to `public`
+- `schema` optional, defaults to `public` for PostgreSQL and to the current database for MySQL. SQLite ignores the schema value.
 
 `structuredContent`:
 
@@ -125,7 +125,7 @@ Inputs:
 
 ## `explain_query`
 
-Runs `EXPLAIN (FORMAT JSON)` for a guarded readonly query and includes execution timing plus a lightweight root-node summary.
+Runs dialect-specific explain output for a guarded readonly query and includes execution timing plus a lightweight summary.
 
 Inputs:
 

@@ -24,7 +24,7 @@ features:
   - title: MCP Native
     details: Expose tools and resources over stdio with structured outputs that work cleanly in LLM and AI client workflows.
   - title: Dialect Ready
-    details: PostgreSQL and MySQL now run through the same MCP surface, with the dialect interface ready for future SQL adapters.
+    details: PostgreSQL, MySQL, and SQLite now run through the same MCP surface through the shared dialect architecture.
   - title: Explain and Sample
     details: Return explain plans, query summaries, and representative sample rows with predictable, constrained behavior.
   - title: Simple to Run
@@ -53,7 +53,14 @@ DATABASE_DIALECT=mysql \
 DATABASE_URL=mysql://USER:PASSWORD@HOST:PORT/DB ajan-sql
 ```
 
-`DATABASE_DIALECT` defaults to `postgres`. Supported values today are `postgres` and `mysql`.
+SQLite:
+
+```bash
+DATABASE_DIALECT=sqlite \
+DATABASE_URL=file:/absolute/path/to/database.sqlite ajan-sql
+```
+
+`DATABASE_DIALECT` defaults to `postgres`. Supported values today are `postgres`, `mysql`, and `sqlite`.
 
 ## MCP Client Example
 

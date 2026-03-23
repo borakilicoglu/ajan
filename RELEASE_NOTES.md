@@ -1,6 +1,6 @@
 ## What's Changed
 
-- Added initial MySQL dialect support with `mysql2`
-- Added `DATABASE_DIALECT=mysql` runtime and configuration support
-- Added MySQL usage examples to README and docs
-- Fixed MySQL schema introspection aliases after real Docker-based validation
+- Added initial SQLite dialect support with `better-sqlite3`
+- Added `DATABASE_DIALECT=sqlite` runtime and configuration support
+- Added SQLite unit coverage for schema discovery, guarded queries, sampling, and explain output
+- Updated README and docs for PostgreSQL, MySQL, and SQLite usage
