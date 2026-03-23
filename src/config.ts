@@ -1,5 +1,5 @@
 const DEFAULT_DB_POOL_MAX = 10;
-const SUPPORTED_DATABASE_DIALECTS = ["postgres"] as const;
+const SUPPORTED_DATABASE_DIALECTS = ["postgres", "mysql"] as const;
 
 export type DatabaseDialectName = (typeof SUPPORTED_DATABASE_DIALECTS)[number];
 

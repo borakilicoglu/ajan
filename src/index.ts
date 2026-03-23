@@ -4,27 +4,40 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 
 import { getAppConfig } from "./config";
 import { closeDbPool, createDbPool } from "./db/pool";
+import { closeMysqlPool, createMysqlPool } from "./db/mysql-pool";
+import { createMysqlDialect } from "./dialects/mysql";
+import { createPostgresDialect } from "./dialects/postgres";
 import { createAjanServer } from "./server";
 
 async function main(): Promise<void> {
   const config = getAppConfig();
-
-  if (config.databaseDialect !== "postgres") {
-    throw new Error(`Unsupported database dialect at runtime: ${config.databaseDialect}`);
-  }
-
-  const pool = createDbPool({
-    connectionString: config.databaseUrl,
-    max: config.dbPoolMax,
-  });
-
-  const server = createAjanServer({ pool });
   const transport = new StdioServerTransport();
+  let shutdown: (() => Promise<void>) | null = null;
+  let server;
 
-  const shutdown = async () => {
-    await closeDbPool(pool);
-    process.exit(0);
-  };
+  if (config.databaseDialect === "mysql") {
+    const pool = createMysqlPool({
+      uri: config.databaseUrl,
+      connectionLimit: config.dbPoolMax,
+    });
+    const dialect = createMysqlDialect(pool);
+    server = createAjanServer({ dialect });
+    shutdown = async () => {
+      await closeMysqlPool(pool);
+      process.exit(0);
+    };
+  } else {
+    const pool = createDbPool({
+      connectionString: config.databaseUrl,
+      max: config.dbPoolMax,
+    });
+    const dialect = createPostgresDialect(pool);
+    server = createAjanServer({ dialect });
+    shutdown = async () => {
+      await closeDbPool(pool);
+      process.exit(0);
+    };
+  }
 
   process.on("SIGINT", shutdown);
   process.on("SIGTERM", shutdown);
