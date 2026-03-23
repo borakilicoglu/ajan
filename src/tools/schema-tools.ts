@@ -2,12 +2,19 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
 import type { DatabaseDialect } from "../dialects/types";
+import type {
+  DescribeTableArgs,
+  ExplainQueryArgs,
+  RunReadonlyQueryArgs,
+  SampleRowsArgs,
+  ToolResponse,
+} from "./types";
 
 type SchemaToolDeps = {
   dialect: DatabaseDialect;
 };
 
-function asStructuredResult<T>(summary: string, data: T) {
+function asStructuredResult<T>(summary: string, data: T): ToolResponse<T> {
   return {
     content: [
       {
@@ -18,22 +25,6 @@ function asStructuredResult<T>(summary: string, data: T) {
     structuredContent: data,
   };
 }
-
-type DescribeTableArgs = {
-  name: string;
-  schema?: string;
-};
-
-type SqlArgs = {
-  sql: string;
-};
-
-type SampleRowsArgs = {
-  name: string;
-  schema?: string;
-  limit?: number;
-  columns?: string[];
-};
 
 export function registerSchemaTools(
   server: McpServer,
@@ -101,7 +92,7 @@ export function registerSchemaTools(
         sql: z.string().min(1),
       },
     },
-    async ({ sql }: SqlArgs) => {
+    async ({ sql }: RunReadonlyQueryArgs) => {
       const result = await deps.dialect.runReadonlyQuery(sql);
       return asStructuredResult(
         `Query returned ${result.rowCount} rows in ${result.durationMs}ms.`,
@@ -118,7 +109,7 @@ export function registerSchemaTools(
         sql: z.string().min(1),
       },
     },
-    async ({ sql }: SqlArgs) => {
+    async ({ sql }: ExplainQueryArgs) => {
       const result = await deps.dialect.explainReadonlyQuery(sql);
       const rootNode = result.summary?.nodeType ?? "unknown";
       return asStructuredResult(
