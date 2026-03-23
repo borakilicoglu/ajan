@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 import type {
   RelationshipSummary,
   TableDescription,
@@ -18,25 +20,37 @@ export type ToolResponse<T> = {
   structuredContent: T;
 };
 
-export type DescribeTableArgs = {
-  name: string;
-  schema?: string;
-};
+export const describeTableInput = z.object({
+  name: z.string().min(1),
+  schema: z.string().min(1).optional(),
+});
 
-export type RunReadonlyQueryArgs = {
-  sql: string;
-};
+export const describeTableSchema = describeTableInput.shape;
+export type DescribeTableArgs = z.infer<typeof describeTableInput>;
 
-export type ExplainQueryArgs = {
-  sql: string;
-};
+export const runReadonlyQueryInput = z.object({
+  sql: z.string().min(1),
+});
 
-export type SampleRowsArgs = {
-  name: string;
-  schema?: string;
-  limit?: number;
-  columns?: string[];
-};
+export const runReadonlyQuerySchema = runReadonlyQueryInput.shape;
+export type RunReadonlyQueryArgs = z.infer<typeof runReadonlyQueryInput>;
+
+export const explainQueryInput = z.object({
+  sql: z.string().min(1),
+});
+
+export const explainQuerySchema = explainQueryInput.shape;
+export type ExplainQueryArgs = z.infer<typeof explainQueryInput>;
+
+export const sampleRowsInput = z.object({
+  name: z.string().min(1),
+  schema: z.string().min(1).optional(),
+  limit: z.number().int().positive().max(100).optional(),
+  columns: z.array(z.string().min(1)).optional(),
+});
+
+export const sampleRowsSchema = sampleRowsInput.shape;
+export type SampleRowsArgs = z.infer<typeof sampleRowsInput>;
 
 export type ListTablesResult = TableSummary[];
 export type DescribeTableResult = TableDescription;

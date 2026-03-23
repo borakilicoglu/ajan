@@ -11,7 +11,7 @@
 | `explain_query` | Return JSON execution plan for a readonly query | `sql` | Yes | `ExplainQueryResult` |
 | `sample_rows` | Return a limited sample from a table | `name`, optional `schema`, optional `limit`, optional `columns` | Yes | `ReadonlyQueryResult` |
 
-## Structured Output
+## Shared Contract
 
 All tools return both:
 
@@ -20,6 +20,20 @@ All tools return both:
 
 Tool outputs are normalized across dialects. Field values such as data types, index names, explain plans, and row estimates may vary between PostgreSQL, MySQL, and SQLite.
 
+Shared response envelope:
+
+```json
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "Short summary"
+    }
+  ],
+  "structuredContent": {}
+}
+```
+
 ## Canonical Shapes
 
 The canonical tool names and shared TypeScript payload shapes live in the source tree:
@@ -27,7 +41,29 @@ The canonical tool names and shared TypeScript payload shapes live in the source
 - `src/tools/names.ts` for MCP tool identifiers
 - `src/tools/types.ts` for shared argument and response types
 
-The examples below document the runtime payloads those source files describe.
+These source files are the contract source of truth. The sections below document the runtime payloads they describe.
+
+## Input Contracts
+
+| Tool | Required Inputs | Optional Inputs | Constraints |
+| --- | --- | --- | --- |
+| `list_tables` | None | None | N/A |
+| `describe_table` | `name` | `schema` | non-empty strings |
+| `list_relationships` | None | None | N/A |
+| `run_readonly_query` | `sql` | None | non-empty string, guarded readonly query |
+| `explain_query` | `sql` | None | non-empty string, guarded readonly query |
+| `sample_rows` | `name` | `schema`, `limit`, `columns` | `limit` max `100`, selected columns must exist |
+
+## Output Contracts
+
+| Tool | `structuredContent` Shape |
+| --- | --- |
+| `list_tables` | `TableSummary[]` |
+| `describe_table` | `TableDescription` |
+| `list_relationships` | `RelationshipSummary[]` |
+| `run_readonly_query` | `ReadonlyQueryResult` |
+| `explain_query` | `ExplainQueryResult` |
+| `sample_rows` | `ReadonlyQueryResult` |
 
 ## `list_tables`
 

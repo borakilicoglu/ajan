@@ -1,5 +1,4 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { z } from "zod";
 
 import type { DatabaseDialect } from "../dialects/types";
 import { TOOL_NAMES } from "./names";
@@ -9,6 +8,12 @@ import type {
   RunReadonlyQueryArgs,
   SampleRowsArgs,
   ToolResponse,
+} from "./types";
+import {
+  describeTableSchema,
+  explainQuerySchema,
+  runReadonlyQuerySchema,
+  sampleRowsSchema,
 } from "./types";
 
 type SchemaToolDeps = {
@@ -51,10 +56,7 @@ export function registerSchemaTools(
     TOOL_NAMES.describeTable,
     {
       description: "Return columns and types for a given table.",
-      inputSchema: {
-        name: z.string().min(1),
-        schema: z.string().min(1).optional(),
-      },
+      inputSchema: describeTableSchema,
     },
     async ({ name, schema }: DescribeTableArgs) => {
       const resolvedSchema = schema ?? "public";
@@ -89,9 +91,7 @@ export function registerSchemaTools(
     TOOL_NAMES.runReadonlyQuery,
     {
       description: "Execute a safe SELECT query.",
-      inputSchema: {
-        sql: z.string().min(1),
-      },
+      inputSchema: runReadonlyQuerySchema,
     },
     async ({ sql }: RunReadonlyQueryArgs) => {
       const result = await deps.dialect.runReadonlyQuery(sql);
@@ -106,9 +106,7 @@ export function registerSchemaTools(
     TOOL_NAMES.explainQuery,
     {
       description: "Return query execution plan.",
-      inputSchema: {
-        sql: z.string().min(1),
-      },
+      inputSchema: explainQuerySchema,
     },
     async ({ sql }: ExplainQueryArgs) => {
       const result = await deps.dialect.explainReadonlyQuery(sql);
@@ -124,12 +122,7 @@ export function registerSchemaTools(
     TOOL_NAMES.sampleRows,
     {
       description: "Return example rows from a table.",
-      inputSchema: {
-        name: z.string().min(1),
-        schema: z.string().min(1).optional(),
-        limit: z.number().int().positive().max(100).optional(),
-        columns: z.array(z.string().min(1)).optional(),
-      },
+      inputSchema: sampleRowsSchema,
     },
     async ({ name, schema, limit, columns }: SampleRowsArgs) => {
       const result = await deps.dialect.sampleRows(
