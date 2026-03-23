@@ -3,29 +3,10 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/ajan-sql">
-    <img src="https://img.shields.io/npm/v/ajan-sql" alt="npm version" />
-  </a>
-  <a href="https://www.npmjs.com/package/ajan-sql">
-    <img src="https://img.shields.io/npm/dm/ajan-sql" alt="npm downloads" />
-  </a>
-  <a href="https://github.com/borakilicoglu/ajan-sql/releases">
-    <img src="https://img.shields.io/github/v/release/borakilicoglu/ajan-sql" alt="github release" />
-  </a>
-  <a href="https://borakilicoglu.github.io/ajan-sql/">
-    <img src="https://img.shields.io/badge/docs-vitepress-5d98ea" alt="docs" />
-  </a>
-  <a href="./LICENSE">
-    <img src="https://img.shields.io/badge/license-MIT-lightgrey" alt="license" />
-  </a>
-</p>
-
-<p align="center">
-  <a href="https://github.com/borakilicoglu/ajan-sql">GitHub Repository</a>
-</p>
-
-<p align="center">
-  <a href="https://www.npmjs.com/package/ajan-sql">npm Package</a>
+  <a href="https://www.npmjs.com/package/ajan-sql"><img src="https://img.shields.io/npm/v/ajan-sql" alt="npm version" /></a>
+  <a href="https://www.npmjs.com/package/ajan-sql"><img src="https://img.shields.io/npm/dm/ajan-sql" alt="npm downloads" /></a>
+  <a href="https://borakilicoglu.github.io/ajan-sql/"><img src="https://img.shields.io/badge/docs-vitepress-5d98ea" alt="docs" /></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-lightgrey" alt="license" /></a>
 </p>
 
 <p align="center">
