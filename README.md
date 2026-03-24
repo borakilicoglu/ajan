@@ -61,6 +61,8 @@ Schema metadata calls such as `list_tables`, `describe_table`, and `list_relatio
 - `list_tables`
 - `describe_table`
 - `list_relationships`
+- `server_info`
+- `search_schema`
 - `run_readonly_query`
 - `explain_query`
 - `sample_rows`
@@ -72,6 +74,8 @@ Schema metadata calls such as `list_tables`, `describe_table`, and `list_relatio
 | `list_tables` | List visible database tables with comments and row estimates | None | N/A | `TableSummary[]` |
 | `describe_table` | Describe columns and types for one table | `name`, optional `schema` | N/A | `TableDescription` |
 | `list_relationships` | List foreign key relationships | None | N/A | `RelationshipSummary[]` |
+| `server_info` | Return runtime server details for onboarding and diagnostics | None | N/A | `ServerInfoResult` |
+| `search_schema` | Search table and column names across the schema | `query`, optional `schema`, optional `limit` | N/A | `SearchSchemaResult` |
 | `run_readonly_query` | Execute a readonly `SELECT` query | `sql` | Yes | `ReadonlyQueryResult` |
 | `explain_query` | Return JSON execution plan for a readonly query | `sql` | Yes | `ExplainQueryResult` |
 | `sample_rows` | Return a limited sample from a table | `name`, optional `schema`, optional `limit`, optional `columns` | Yes | `ReadonlyQueryResult` |
@@ -224,7 +228,7 @@ The CLI will:
 
 ## Status
 
-Early development. The CLI now supports PostgreSQL, MySQL, and SQLite through a shared dialect-based architecture, and the current package version is `0.1.8`.
+Early development. The CLI now supports PostgreSQL, MySQL, and SQLite through a shared dialect-based architecture, and the current package version is `0.1.9`.
 
 ## Support
 

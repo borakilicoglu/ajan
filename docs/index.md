@@ -83,6 +83,8 @@ DATABASE_URL=file:/absolute/path/to/database.sqlite ajan-sql
 - `list_tables`
 - `describe_table`
 - `list_relationships`
+- `server_info`
+- `search_schema`
 - `run_readonly_query`
 - `explain_query`
 - `sample_rows`

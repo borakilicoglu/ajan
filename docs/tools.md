@@ -7,6 +7,8 @@
 | `list_tables` | List visible database tables | None | N/A | `TableSummary[]` |
 | `describe_table` | Describe columns and types for one table | `name`, optional `schema` | N/A | `TableDescription` |
 | `list_relationships` | List foreign key relationships | None | N/A | `RelationshipSummary[]` |
+| `server_info` | Return runtime server details for onboarding and diagnostics | None | N/A | `ServerInfoResult` |
+| `search_schema` | Search table and column names across the schema | `query`, optional `schema`, optional `limit` | N/A | `SearchSchemaResult` |
 | `run_readonly_query` | Execute a readonly `SELECT` query | `sql` | Yes | `ReadonlyQueryResult` |
 | `explain_query` | Return JSON execution plan for a readonly query | `sql` | Yes | `ExplainQueryResult` |
 | `sample_rows` | Return a limited sample from a table | `name`, optional `schema`, optional `limit`, optional `columns` | Yes | `ReadonlyQueryResult` |
@@ -50,6 +52,8 @@ These source files are the contract source of truth. The sections below document
 | `list_tables` | None | None | N/A |
 | `describe_table` | `name` | `schema` | non-empty strings |
 | `list_relationships` | None | None | N/A |
+| `server_info` | None | None | N/A |
+| `search_schema` | `query` | `schema`, `limit` | `limit` max `50`, substring search |
 | `run_readonly_query` | `sql` | None | non-empty string, guarded readonly query |
 | `explain_query` | `sql` | None | non-empty string, guarded readonly query |
 | `sample_rows` | `name` | `schema`, `limit`, `columns` | `limit` max `100`, selected columns must exist |
@@ -61,6 +65,8 @@ These source files are the contract source of truth. The sections below document
 | `list_tables` | `TableSummary[]` |
 | `describe_table` | `TableDescription` |
 | `list_relationships` | `RelationshipSummary[]` |
+| `server_info` | `ServerInfoResult` |
+| `search_schema` | `SearchSchemaResult` |
 | `run_readonly_query` | `ReadonlyQueryResult` |
 | `explain_query` | `ExplainQueryResult` |
 | `sample_rows` | `ReadonlyQueryResult` |
@@ -141,6 +147,64 @@ Returns foreign key relationships across the database schema.
     "targetColumn": "id"
   }
 ]
+```
+
+## `server_info`
+
+Returns lightweight runtime details that help MCP clients confirm the active version, dialect, available tools, resources, and readonly guard settings.
+
+`structuredContent`:
+
+```json
+{
+  "name": "ajan-sql",
+  "version": "0.1.9",
+  "dialect": "postgres",
+  "tools": ["server_info", "list_tables", "describe_table"],
+  "resources": ["schema://snapshot", "schema://table/{name}"],
+  "readonly": {
+    "defaultLimit": 100,
+    "maxLimit": 100,
+    "timeoutMs": 5000,
+    "maxResultBytes": 1000000
+  }
+}
+```
+
+## `search_schema`
+
+Searches table names and column names using a case-insensitive substring match. This is useful for large schemas when the client knows a concept but not the exact table name.
+
+Inputs:
+
+- `query`
+- `schema` optional
+- `limit` optional, max `50`
+
+`structuredContent`:
+
+```json
+{
+  "query": "user",
+  "schema": "public",
+  "totalMatches": 2,
+  "matches": [
+    {
+      "schema": "public",
+      "table": "users",
+      "column": null,
+      "dataType": null,
+      "matchType": "table"
+    },
+    {
+      "schema": "public",
+      "table": "posts",
+      "column": "user_id",
+      "dataType": "bigint",
+      "matchType": "column"
+    }
+  ]
+}
 ```
 
 ## `run_readonly_query`

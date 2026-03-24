@@ -1,6 +1,6 @@
 ## What's Changed
 
-- Centralized MCP tool names and derived tool argument types from shared schemas
-- Tightened MCP tool and resource contract assertions in server tests
-- Added dedicated MCP resource contract documentation and docs navigation links
-- Simplified MCP tool registration and README header links
+- Added `server_info` for lightweight runtime diagnostics and MCP client onboarding
+- Added `search_schema` to search table and column names across the active schema
+- Moved server versioning to a shared runtime constant and bumped the package to `0.1.9`
+- Expanded tests and documentation for the new MCP tool contracts

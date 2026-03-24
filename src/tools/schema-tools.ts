@@ -1,5 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
+import { getReadonlyDefaults } from "../guard";
+import { AJAN_SQL_VERSION } from "../version";
 import type { DatabaseDialect } from "../dialects/types";
 import { TOOL_NAMES } from "./names";
 import type {
@@ -8,6 +10,9 @@ import type {
   ExplainQueryArgs,
   RunReadonlyQueryArgs,
   SampleRowsArgs,
+  SearchSchemaArgs,
+  SearchSchemaMatch,
+  ServerInfoResult,
   ToolError,
   ToolResponse,
 } from "./types";
@@ -16,6 +21,7 @@ import {
   explainQuerySchema,
   runReadonlyQuerySchema,
   sampleRowsSchema,
+  searchSchemaSchema,
 } from "./types";
 
 type SchemaToolDeps = {
@@ -145,6 +151,34 @@ function registerListTablesTool(registerTool: RegisterTool, deps: SchemaToolDeps
   );
 }
 
+function registerServerInfoTool(registerTool: RegisterTool, deps: SchemaToolDeps): void {
+  registerTool(
+    TOOL_NAMES.serverInfo,
+    {
+      description: "Return server runtime details for onboarding and diagnostics.",
+    },
+    withToolErrorHandling(async () => {
+      const readonly = getReadonlyDefaults();
+      const result: ServerInfoResult = {
+        name: "ajan-sql",
+        version: AJAN_SQL_VERSION,
+        dialect: deps.dialect.name,
+        tools: Object.values(TOOL_NAMES),
+        resources: [
+          "schema://snapshot",
+          "schema://table/{name}",
+        ],
+        readonly,
+      };
+
+      return asStructuredResult(
+        `Server ajan-sql ${AJAN_SQL_VERSION} is running with the ${deps.dialect.name} dialect.`,
+        result,
+      );
+    }),
+  );
+}
+
 function registerDescribeTableTool(registerTool: RegisterTool, deps: SchemaToolDeps): void {
   registerTool(
     TOOL_NAMES.describeTable,
@@ -179,6 +213,79 @@ function registerListRelationshipsTool(registerTool: RegisterTool, deps: SchemaT
       return asStructuredResult(
         `Listed ${relationships.length} foreign key relationships.`,
         relationships,
+      );
+    }),
+  );
+}
+
+function registerSearchSchemaTool(registerTool: RegisterTool, deps: SchemaToolDeps): void {
+  registerTool(
+    TOOL_NAMES.searchSchema,
+    {
+      description: "Search table and column names across the available schema.",
+      inputSchema: searchSchemaSchema,
+    },
+    withToolErrorHandling(async ({ query, schema, limit }: SearchSchemaArgs) => {
+      const resolvedLimit = limit ?? 20;
+      const normalizedQuery = query.trim().toLowerCase();
+      const tables = await deps.dialect.listTables();
+      const filteredTables = schema
+        ? tables.filter((table) => table.schema === schema)
+        : tables;
+      const matches: SearchSchemaMatch[] = [];
+
+      for (const table of filteredTables) {
+        if (matches.length >= resolvedLimit) {
+          break;
+        }
+
+        if (table.name.toLowerCase().includes(normalizedQuery)) {
+          matches.push({
+            schema: table.schema,
+            table: table.name,
+            column: null,
+            dataType: null,
+            matchType: "table",
+          });
+        }
+
+        if (matches.length >= resolvedLimit) {
+          break;
+        }
+
+        const description = await deps.dialect.describeTable(table.name, table.schema);
+
+        if (!description) {
+          continue;
+        }
+
+        for (const column of description.columns) {
+          if (matches.length >= resolvedLimit) {
+            break;
+          }
+
+          if (!column.name.toLowerCase().includes(normalizedQuery)) {
+            continue;
+          }
+
+          matches.push({
+            schema: table.schema,
+            table: table.name,
+            column: column.name,
+            dataType: column.dataType,
+            matchType: "column",
+          });
+        }
+      }
+
+      return asStructuredResult(
+        `Found ${matches.length} schema matches for "${query}".`,
+        {
+          query,
+          schema: schema ?? null,
+          totalMatches: matches.length,
+          matches,
+        },
       );
     }),
   );
@@ -243,9 +350,11 @@ function registerSampleRowsTool(registerTool: RegisterTool, deps: SchemaToolDeps
 }
 
 const registerSchemaToolSet = [
+  registerServerInfoTool,
   registerListTablesTool,
   registerDescribeTableTool,
   registerListRelationshipsTool,
+  registerSearchSchemaTool,
   registerReadonlyQueryTool,
   registerExplainQueryTool,
   registerSampleRowsTool,

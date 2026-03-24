@@ -6,6 +6,7 @@ import type { DatabaseDialect } from "./dialects/types";
 import type { DbPool } from "./db/pool";
 import { registerSchemaResources } from "./resources/schema-resources";
 import { registerSchemaTools } from "./tools/schema-tools";
+import { AJAN_SQL_VERSION } from "./version";
 
 type CreateAjanServerOptions = {
   pool?: DbPool;
@@ -26,7 +27,7 @@ export function createAjanServer(
 
   const server = new McpServer({
     name: "ajan-sql",
-    version: "0.1.8",
+    version: AJAN_SQL_VERSION,
   });
 
   registerSchemaTools(server, { dialect: cachedDialect });

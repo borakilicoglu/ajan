@@ -38,6 +38,9 @@ export type ErrorToolResponse = ToolResponse<{
   error: ToolError;
 }>;
 
+export const serverInfoInput = z.object({});
+export const serverInfoSchema = serverInfoInput.shape;
+
 export const describeTableInput = z.object({
   name: z.string().min(1),
   schema: z.string().min(1).optional(),
@@ -70,9 +73,49 @@ export const sampleRowsInput = z.object({
 export const sampleRowsSchema = sampleRowsInput.shape;
 export type SampleRowsArgs = z.infer<typeof sampleRowsInput>;
 
+export const searchSchemaInput = z.object({
+  query: z.string().min(1),
+  schema: z.string().min(1).optional(),
+  limit: z.number().int().positive().max(50).optional(),
+});
+
+export const searchSchemaSchema = searchSchemaInput.shape;
+export type SearchSchemaArgs = z.infer<typeof searchSchemaInput>;
+
+export type ServerInfoResult = {
+  name: string;
+  version: string;
+  dialect: string;
+  tools: string[];
+  resources: string[];
+  readonly: {
+    defaultLimit: number;
+    maxLimit: number;
+    timeoutMs: number;
+    maxResultBytes: number;
+  };
+};
+
+export type SearchSchemaMatch = {
+  schema: string;
+  table: string;
+  column: string | null;
+  dataType: string | null;
+  matchType: "table" | "column";
+};
+
+export type SearchSchemaResult = {
+  query: string;
+  schema: string | null;
+  totalMatches: number;
+  matches: SearchSchemaMatch[];
+};
+
 export type ListTablesResult = TableSummary[];
 export type DescribeTableResult = TableDescription;
 export type ListRelationshipsResult = RelationshipSummary[];
+export type ServerInfoResultPayload = ServerInfoResult;
+export type SearchSchemaResultPayload = SearchSchemaResult;
 export type RunReadonlyQueryResult = ReadonlyQueryResult;
 export type ExplainQueryResultPayload = ExplainQueryResult;
 export type SampleRowsResult = ReadonlyQueryResult;

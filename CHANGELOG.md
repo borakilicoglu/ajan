@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.9
+
+- Added `server_info` for lightweight server diagnostics and client onboarding
+- Added `search_schema` for table and column discovery across large schemas
+- Standardized more server metadata around a shared runtime version constant
+- Expanded tool contract coverage and updated release documentation
+
 ## 0.1.8
 
 - Centralized MCP tool names and derived tool argument types from shared schemas

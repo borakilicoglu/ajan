@@ -4,6 +4,7 @@ import type { DatabaseDialect } from "../src/dialects/types";
 import { createAjanServer } from "../src/server";
 import { TOOL_NAME_LIST, TOOL_NAMES } from "../src/tools/names";
 import type { ToolResponse } from "../src/tools/types";
+import { AJAN_SQL_VERSION } from "../src/version";
 
 function expectTextSummary(result: ToolResponse<unknown>, summaryPart: string): void {
   expect(result.content).toHaveLength(1);
@@ -219,6 +220,52 @@ describe("createAjanServer", () => {
     expect(dialect.runReadonlyQuery).toHaveBeenCalledWith("SELECT 1");
     expectTextSummary(result, "Query returned 1 rows");
     expect(result.structuredContent.rowCount).toBe(1);
+  });
+
+  it("returns structured content for server_info", async () => {
+    const dialect: DatabaseDialect = {
+      name: "sqlite",
+      listTables: vi.fn(async () => []),
+      describeTable: vi.fn(async () => null),
+      listRelationships: vi.fn(async () => []),
+      runReadonlyQuery: vi.fn(async () => ({
+        sql: "SELECT 1 LIMIT 1",
+        rowCount: 1,
+        durationMs: 1,
+        columns: [],
+        rows: [],
+      })),
+      explainReadonlyQuery: vi.fn(async () => ({
+        sql: "SELECT 1 LIMIT 1",
+        durationMs: 1,
+        summary: null,
+        plan: [],
+      })),
+      sampleRows: vi.fn(async () => ({
+        sql: 'SELECT * FROM "main"."users" LIMIT 1',
+        rowCount: 0,
+        durationMs: 1,
+        columns: [],
+        rows: [],
+      })),
+    };
+
+    const server = createAjanServer({ dialect }) as any;
+    const result = await server._registeredTools[TOOL_NAMES.serverInfo].handler({});
+
+    expectStructuredResult(result, "Server ajan-sql", {
+      name: "ajan-sql",
+      version: AJAN_SQL_VERSION,
+      dialect: "sqlite",
+      tools: [...TOOL_NAME_LIST],
+      resources: ["schema://snapshot", "schema://table/{name}"],
+      readonly: {
+        defaultLimit: 100,
+        maxLimit: 100,
+        timeoutMs: 5000,
+        maxResultBytes: 1000000,
+      },
+    });
   });
 
   it("returns a standard error payload for missing tables", async () => {
@@ -540,6 +587,38 @@ describe("createAjanServer", () => {
       durationMs: expect.any(Number),
       columns: [{ name: "id", dataTypeId: 20 }],
       rows: [{ id: 1 }],
+    });
+  });
+
+  it("returns structured content for search_schema", async () => {
+    const server = createAjanServer({ pool: createMockPool() as any }) as any;
+
+    const result = await server._registeredTools[TOOL_NAMES.searchSchema].handler({
+      query: "id",
+      schema: "public",
+      limit: 5,
+    });
+
+    expectStructuredResult(result, 'Found 2 schema matches for "id"', {
+      query: "id",
+      schema: "public",
+      totalMatches: 2,
+      matches: [
+        {
+          schema: "public",
+          table: "users",
+          column: "id",
+          dataType: "bigint",
+          matchType: "column",
+        },
+        {
+          schema: "public",
+          table: "posts",
+          column: "id",
+          dataType: "bigint",
+          matchType: "column",
+        },
+      ],
     });
   });
 
