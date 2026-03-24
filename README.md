@@ -236,4 +236,4 @@ If `ajan-sql` saves you time, helps you ship faster, or keeps a few risky querie
 
 ## License
 
-MIT
+This project is licensed under the MIT License - see the LICENSE file for details.
