@@ -15,10 +15,28 @@ export type ToolTextContent = {
   text: string;
 };
 
+export type ToolErrorCode =
+  | "INVALID_QUERY"
+  | "NOT_FOUND"
+  | "INVALID_INPUT"
+  | "RESULT_LIMIT_EXCEEDED"
+  | "RESULT_TOO_LARGE"
+  | "INTERNAL_ERROR";
+
+export type ToolError = {
+  code: ToolErrorCode;
+  message: string;
+};
+
 export type ToolResponse<T> = {
   content: ToolTextContent[];
   structuredContent: T;
 };
+
+export type ErrorToolResponse = ToolResponse<{
+  ok: false;
+  error: ToolError;
+}>;
 
 export const describeTableInput = z.object({
   name: z.string().min(1),

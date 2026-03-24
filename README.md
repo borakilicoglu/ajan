@@ -81,6 +81,8 @@ All tools return:
 - `content` for a short human-readable summary
 - `structuredContent` for machine-friendly MCP client consumption
 
+For tool failures, `structuredContent` returns a standard error object with `ok: false`, plus `error.code` and `error.message`.
+
 Detailed payload examples are available in [docs/tools.md](./docs/tools.md).
 
 ## Available MCP Resources

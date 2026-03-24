@@ -23,6 +23,21 @@ function expectStructuredResult<T>(
   expect(result.structuredContent).toEqual(expectedStructuredContent);
 }
 
+function expectErrorResult(
+  result: ToolResponse<unknown>,
+  expectedCode: string,
+  expectedMessage: string,
+): void {
+  expectTextSummary(result, "Request failed:");
+  expect(result.structuredContent).toEqual({
+    ok: false,
+    error: {
+      code: expectedCode,
+      message: expectedMessage,
+    },
+  });
+}
+
 function expectResourceContents(
   result: {
     contents: Array<{ uri: string; text: string; mimeType?: string }>;
@@ -204,6 +219,113 @@ describe("createAjanServer", () => {
     expect(dialect.runReadonlyQuery).toHaveBeenCalledWith("SELECT 1");
     expectTextSummary(result, "Query returned 1 rows");
     expect(result.structuredContent.rowCount).toBe(1);
+  });
+
+  it("returns a standard error payload for missing tables", async () => {
+    const dialect: DatabaseDialect = {
+      name: "test",
+      listTables: vi.fn(async () => []),
+      describeTable: vi.fn(async () => null),
+      listRelationships: vi.fn(async () => []),
+      runReadonlyQuery: vi.fn(async () => ({
+        sql: "SELECT 1 LIMIT 1",
+        rowCount: 1,
+        durationMs: 1,
+        columns: [],
+        rows: [],
+      })),
+      explainReadonlyQuery: vi.fn(async () => ({
+        sql: "SELECT 1 LIMIT 1",
+        durationMs: 1,
+        summary: null,
+        plan: [],
+      })),
+      sampleRows: vi.fn(async () => ({
+        sql: 'SELECT * FROM "public"."users" LIMIT 1',
+        rowCount: 0,
+        durationMs: 1,
+        columns: [],
+        rows: [],
+      })),
+    };
+
+    const server = createAjanServer({ dialect }) as any;
+    const result = await server._registeredTools[TOOL_NAMES.describeTable].handler({
+      name: "missing_table",
+      schema: "public",
+    });
+
+    expectErrorResult(result, "NOT_FOUND", "Table not found: public.missing_table");
+  });
+
+  it("returns a standard error payload for invalid readonly SQL", async () => {
+    const dialect: DatabaseDialect = {
+      name: "test",
+      listTables: vi.fn(async () => []),
+      describeTable: vi.fn(async () => null),
+      listRelationships: vi.fn(async () => []),
+      runReadonlyQuery: vi.fn(async () => {
+        throw new Error("Only SELECT queries are allowed");
+      }),
+      explainReadonlyQuery: vi.fn(async () => ({
+        sql: "SELECT 1 LIMIT 1",
+        durationMs: 1,
+        summary: null,
+        plan: [],
+      })),
+      sampleRows: vi.fn(async () => ({
+        sql: 'SELECT * FROM "public"."users" LIMIT 1',
+        rowCount: 0,
+        durationMs: 1,
+        columns: [],
+        rows: [],
+      })),
+    };
+
+    const server = createAjanServer({ dialect }) as any;
+    const result = await server._registeredTools[TOOL_NAMES.runReadonlyQuery].handler({
+      sql: "delete from users",
+    });
+
+    expectErrorResult(result, "INVALID_QUERY", "Only SELECT queries are allowed");
+  });
+
+  it("returns a standard error payload for invalid sample_rows columns", async () => {
+    const dialect: DatabaseDialect = {
+      name: "test",
+      listTables: vi.fn(async () => []),
+      describeTable: vi.fn(async () => null),
+      listRelationships: vi.fn(async () => []),
+      runReadonlyQuery: vi.fn(async () => ({
+        sql: "SELECT 1 LIMIT 1",
+        rowCount: 1,
+        durationMs: 1,
+        columns: [],
+        rows: [],
+      })),
+      explainReadonlyQuery: vi.fn(async () => ({
+        sql: "SELECT 1 LIMIT 1",
+        durationMs: 1,
+        summary: null,
+        plan: [],
+      })),
+      sampleRows: vi.fn(async () => {
+        throw new Error("Unknown column for sample_rows: password_hash");
+      }),
+    };
+
+    const server = createAjanServer({ dialect }) as any;
+    const result = await server._registeredTools[TOOL_NAMES.sampleRows].handler({
+      name: "users",
+      schema: "public",
+      columns: ["password_hash"],
+    });
+
+    expectErrorResult(
+      result,
+      "INVALID_INPUT",
+      "Unknown column for sample_rows: password_hash",
+    );
   });
 
   it("registers all MCP tools", () => {
