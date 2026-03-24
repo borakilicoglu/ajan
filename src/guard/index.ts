@@ -12,6 +12,13 @@ const BLOCKED_KEYWORDS = [
   "truncate",
 ];
 
+let readonlyDefaults = {
+  defaultLimit: DEFAULT_LIMIT,
+  maxLimit: MAX_LIMIT,
+  timeoutMs: MAX_TIMEOUT_MS,
+  maxResultBytes: MAX_RESULT_BYTES,
+};
+
 export type GuardedReadonlyQuery = {
   sql: string;
   limit: number;
@@ -27,12 +34,22 @@ export type ReadonlyGuardOptions = {
 };
 
 export function getReadonlyDefaults() {
-  return {
-    defaultLimit: DEFAULT_LIMIT,
-    maxLimit: MAX_LIMIT,
-    timeoutMs: MAX_TIMEOUT_MS,
-    maxResultBytes: MAX_RESULT_BYTES,
+  return { ...readonlyDefaults };
+}
+
+export function configureReadonlyDefaults(
+  options: ReadonlyGuardOptions = {},
+): void {
+  readonlyDefaults = {
+    defaultLimit: options.defaultLimit ?? DEFAULT_LIMIT,
+    maxLimit: options.maxLimit ?? MAX_LIMIT,
+    timeoutMs: options.timeoutMs ?? MAX_TIMEOUT_MS,
+    maxResultBytes: options.maxResultBytes ?? MAX_RESULT_BYTES,
   };
+}
+
+export function resetReadonlyDefaults(): void {
+  configureReadonlyDefaults();
 }
 
 export function guardReadonlyQuery(

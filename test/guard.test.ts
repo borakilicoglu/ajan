@@ -1,6 +1,15 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
-import { guardReadonlyQuery, quoteIdentifier } from "../src/guard";
+import {
+  configureReadonlyDefaults,
+  guardReadonlyQuery,
+  quoteIdentifier,
+  resetReadonlyDefaults,
+} from "../src/guard";
+
+afterEach(() => {
+  resetReadonlyDefaults();
+});
 
 describe("guardReadonlyQuery", () => {
   it("adds a default LIMIT when missing", () => {
@@ -104,6 +113,22 @@ describe("guardReadonlyQuery", () => {
     });
 
     expect(result.timeoutMs).toBe(5000);
+  });
+
+  it("uses configured readonly defaults", () => {
+    configureReadonlyDefaults({
+      defaultLimit: 25,
+      maxLimit: 50,
+      timeoutMs: 1200,
+      maxResultBytes: 4096,
+    });
+
+    const result = guardReadonlyQuery("select * from users");
+
+    expect(result.sql).toBe("select * from users LIMIT 25");
+    expect(result.limit).toBe(25);
+    expect(result.timeoutMs).toBe(1200);
+    expect(result.maxResultBytes).toBe(4096);
   });
 });
 

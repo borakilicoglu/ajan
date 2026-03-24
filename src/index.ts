@@ -9,10 +9,12 @@ import { closeSqliteDatabase, createSqliteDatabase } from "./db/sqlite-db";
 import { createMysqlDialect } from "./dialects/mysql";
 import { createPostgresDialect } from "./dialects/postgres";
 import { createSqliteDialect } from "./dialects/sqlite";
+import { configureReadonlyDefaults } from "./guard";
 import { createAjanServer } from "./server";
 
 async function main(): Promise<void> {
   const config = getAppConfig();
+  configureReadonlyDefaults(config.readonly);
   const transport = new StdioServerTransport();
   let shutdown: (() => Promise<void>) | null = null;
   let server;

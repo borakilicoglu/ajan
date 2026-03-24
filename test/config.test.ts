@@ -1,6 +1,10 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { getAppConfig, getRequiredEnv } from "../src/config";
+import { getAppConfig, getReadonlyConfig, getRequiredEnv } from "../src/config";
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
 
 describe("config", () => {
   it("reads DATABASE_URL from the environment", () => {
@@ -12,6 +16,12 @@ describe("config", () => {
       databaseUrl: "postgres://localhost/test",
       databaseDialect: "postgres",
       dbPoolMax: 10,
+      readonly: {
+        defaultLimit: 100,
+        maxLimit: 100,
+        timeoutMs: 5000,
+        maxResultBytes: 1000000,
+      },
     });
   });
 
@@ -50,11 +60,49 @@ describe("config", () => {
   });
 
   it("fails fast when a required env variable is missing", () => {
-    vi.unstubAllEnvs();
     vi.stubEnv("DATABASE_URL", "");
 
     expect(() => getRequiredEnv("DATABASE_URL")).toThrow(
       "Missing required environment variable: DATABASE_URL",
+    );
+  });
+
+  it("reads optional readonly guard settings from the environment", () => {
+    vi.stubEnv("AJAN_SQL_DEFAULT_LIMIT", "25");
+    vi.stubEnv("AJAN_SQL_MAX_LIMIT", "50");
+    vi.stubEnv("AJAN_SQL_TIMEOUT_MS", "1200");
+    vi.stubEnv("AJAN_SQL_MAX_RESULT_BYTES", "4096");
+
+    expect(getReadonlyConfig()).toEqual({
+      defaultLimit: 25,
+      maxLimit: 50,
+      timeoutMs: 1200,
+      maxResultBytes: 4096,
+    });
+  });
+
+  it("rejects readonly defaults above hard safety caps", () => {
+    vi.stubEnv("AJAN_SQL_MAX_LIMIT", "101");
+
+    expect(() => getReadonlyConfig()).toThrow(
+      "AJAN_SQL_MAX_LIMIT cannot exceed 100",
+    );
+  });
+
+  it("rejects a default limit above the configured max limit", () => {
+    vi.stubEnv("AJAN_SQL_DEFAULT_LIMIT", "75");
+    vi.stubEnv("AJAN_SQL_MAX_LIMIT", "50");
+
+    expect(() => getReadonlyConfig()).toThrow(
+      "AJAN_SQL_DEFAULT_LIMIT cannot exceed AJAN_SQL_MAX_LIMIT",
+    );
+  });
+
+  it("rejects non-numeric readonly env values", () => {
+    vi.stubEnv("AJAN_SQL_TIMEOUT_MS", "5s");
+
+    expect(() => getReadonlyConfig()).toThrow(
+      "AJAN_SQL_TIMEOUT_MS must be a positive integer",
     );
   });
 });

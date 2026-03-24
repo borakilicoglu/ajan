@@ -121,6 +121,15 @@ DATABASE_URL=file:/absolute/path/to/database.sqlite ajan-sql
 
 `DATABASE_DIALECT` defaults to `postgres`. Supported values today are `postgres`, `mysql`, and `sqlite`.
 
+Optional readonly guard env vars:
+
+- `AJAN_SQL_DEFAULT_LIMIT`
+- `AJAN_SQL_MAX_LIMIT`
+- `AJAN_SQL_TIMEOUT_MS`
+- `AJAN_SQL_MAX_RESULT_BYTES`
+
+These can only tighten the defaults. They cannot exceed the built-in hard caps of `LIMIT 100`, `5000ms`, and `1000000` bytes.
+
 ## Local Development
 
 Start the server with a PostgreSQL, MySQL, or SQLite connection target:
