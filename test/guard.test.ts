@@ -38,6 +38,42 @@ describe("guardReadonlyQuery", () => {
     expect(result.sql).toBe("select * from users where email like 'dropbox%' LIMIT 100");
   });
 
+  it("allows semicolons inside string literals", () => {
+    const result = guardReadonlyQuery(
+      "select * from users where note = 'hello;world'",
+    );
+
+    expect(result.sql).toBe("select * from users where note = 'hello;world' LIMIT 100");
+  });
+
+  it("allows comment markers inside string literals", () => {
+    const result = guardReadonlyQuery(
+      "select * from users where note = 'contains -- text and /* markers */'",
+    );
+
+    expect(result.sql).toBe(
+      "select * from users where note = 'contains -- text and /* markers */' LIMIT 100",
+    );
+  });
+
+  it("allows blocked keywords inside quoted identifiers", () => {
+    const result = guardReadonlyQuery(
+      "select \"drop\" from users",
+    );
+
+    expect(result.sql).toBe("select \"drop\" from users LIMIT 100");
+  });
+
+  it("allows common CTE-based SELECT queries", () => {
+    const result = guardReadonlyQuery(
+      "with active_users as (select * from users) select * from active_users",
+    );
+
+    expect(result.sql).toBe(
+      "with active_users as (select * from users) select * from active_users LIMIT 100",
+    );
+  });
+
   it("rejects multiple statements", () => {
     expect(() =>
       guardReadonlyQuery("select * from users; select * from posts"),
@@ -53,6 +89,12 @@ describe("guardReadonlyQuery", () => {
   it("rejects LIMIT values above the maximum", () => {
     expect(() => guardReadonlyQuery("select * from users limit 500")).toThrow(
       "Query LIMIT exceeds maximum allowed value of 100",
+    );
+  });
+
+  it("rejects LIMIT ALL", () => {
+    expect(() => guardReadonlyQuery("select * from users limit all")).toThrow(
+      "LIMIT ALL is not allowed",
     );
   });
 

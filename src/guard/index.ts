@@ -46,11 +46,13 @@ export function guardReadonlyQuery(
   const maxResultBytes = options.maxResultBytes ?? defaults.maxResultBytes;
 
   const normalizedSql = normalizeSql(sql);
+  const scrubbedSql = scrubSqlForGuards(normalizedSql);
 
-  assertSingleStatement(normalizedSql);
-  assertNoSqlComments(normalizedSql);
-  assertSelectOnly(normalizedSql);
-  assertNoBlockedKeywords(normalizedSql);
+  assertSingleStatement(scrubbedSql);
+  assertNoSqlComments(scrubbedSql);
+  assertSelectOnly(scrubbedSql);
+  assertNoBlockedKeywords(scrubbedSql);
+  assertNoUnboundedLimit(scrubbedSql);
 
   const limitMatch = normalizedSql.match(/\blimit\s+(\d+)\b/i);
   const parsedLimit = limitMatch ? Number.parseInt(limitMatch[1], 10) : null;
@@ -98,19 +100,100 @@ function assertNoSqlComments(sql: string): void {
 }
 
 function assertSelectOnly(sql: string): void {
-  if (!/^select\b/i.test(sql)) {
+  if (!/^(select|with)\b/i.test(sql)) {
+    throw new Error("Only SELECT queries are allowed");
+  }
+
+  if (/^with\b/i.test(sql) && !/\bselect\b/i.test(sql)) {
     throw new Error("Only SELECT queries are allowed");
   }
 }
 
 function assertNoBlockedKeywords(sql: string): void {
-  const scrubbedSql = sql.replace(/'(?:''|[^'])*'/g, "''");
-
   for (const keyword of BLOCKED_KEYWORDS) {
     const pattern = new RegExp(`\\b${keyword}\\b`, "i");
 
-    if (pattern.test(scrubbedSql)) {
+    if (pattern.test(sql)) {
       throw new Error(`Blocked SQL keyword detected: ${keyword.toUpperCase()}`);
     }
   }
+}
+
+function assertNoUnboundedLimit(sql: string): void {
+  if (/\blimit\s+all\b/i.test(sql)) {
+    throw new Error("LIMIT ALL is not allowed");
+  }
+}
+
+function scrubSqlForGuards(sql: string): string {
+  let result = "";
+  let index = 0;
+
+  while (index < sql.length) {
+    const current = sql[index];
+    const next = sql[index + 1];
+
+    if (current === "'") {
+      result += "''";
+      index += 1;
+
+      while (index < sql.length) {
+        if (sql[index] === "'" && sql[index + 1] === "'") {
+          index += 2;
+          continue;
+        }
+
+        if (sql[index] === "'") {
+          index += 1;
+          break;
+        }
+
+        index += 1;
+      }
+
+      continue;
+    }
+
+    if (current === "\"" || current === "`") {
+      result += current + current;
+      index += 1;
+
+      while (index < sql.length) {
+        if (sql[index] === current && sql[index + 1] === current) {
+          index += 2;
+          continue;
+        }
+
+        if (sql[index] === current) {
+          index += 1;
+          break;
+        }
+
+        index += 1;
+      }
+
+      continue;
+    }
+
+    if (current === "[" ) {
+      result += "[]";
+      index += 1;
+
+      while (index < sql.length) {
+        if (sql[index] === "]") {
+          index += 1;
+          break;
+        }
+
+        index += 1;
+      }
+
+      continue;
+    }
+
+    result += current;
+    index += 1;
+  }
+
+  return result;
 }
