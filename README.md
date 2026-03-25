@@ -3,174 +3,162 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/ajan-sql"><img src="https://img.shields.io/npm/v/ajan-sql" alt="npm version" /></a>
-  <a href="https://www.npmjs.com/package/ajan-sql"><img src="https://img.shields.io/npm/dt/ajan-sql" alt="npm downloads" /></a>
-  <a href="https://borakilicoglu.github.io/ajan-sql/"><img src="https://img.shields.io/badge/docs-vitepress-5d98ea" alt="docs" /></a>
-  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-lightgrey" alt="license" /></a>
+  <b>Safe, read-only SQL access for AI agents — via MCP.</b>
 </p>
 
 <p align="center">
-  AI-safe MCP server for schema-aware, read-only SQL access.
+  <a href="https://www.npmjs.com/package/ajan-sql"><img src="https://img.shields.io/npm/v/ajan-sql" /></a>
+  <a href="https://www.npmjs.com/package/ajan-sql"><img src="https://img.shields.io/npm/dt/ajan-sql" /></a>
+  <a href="https://borakilicoglu.github.io/ajan-sql/"><img src="https://img.shields.io/badge/docs-vitepress-5d98ea" /></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-lightgrey" /></a>
 </p>
 
-## Overview
+---
 
-`ajan-sql` is an npm package for running an MCP server over stdio with SQL database backends.
+## ⚡ What is ajan-sql?
 
-The project now provides multi-dialect SQL support, with PostgreSQL, MySQL, and SQLite available behind the same MCP surface.
+`ajan-sql` is an MCP server that lets AI agents safely query your database.
 
-## Goals
+👉 read-only  
+👉 schema-aware  
+👉 guardrailed
 
-- Safe, read-only database access for AI agents
-- Schema inspection and table discovery
-- Reliable read-only SQL query execution with strict guardrails
-- Simple, maintainable implementation
+Supports:
 
-## Tech Stack
+- PostgreSQL
+- MySQL
+- SQLite
 
-- Node.js
-- TypeScript
-- MCP TypeScript SDK v1.x
-- PostgreSQL via `pg`
-- MySQL via `mysql2`
-- SQLite via `better-sqlite3`
+---
 
-## Security Model
+## 🚀 Quick Start
 
-All executed queries must follow these rules:
+```bash
+DATABASE_URL=postgres://USER:PASSWORD@HOST:PORT/DB npx ajan-sql
+```
+
+That’s it.
+
+---
+
+## 🧠 What it solves
+
+AI agents querying databases is risky.
+
+Without guardrails:
+
+- they can modify data
+- run heavy queries
+- break your system
+
+👉 `ajan-sql` fixes this by enforcing strict rules.
+
+---
+
+## 🔥 Safety by default
+
+All queries are:
 
 - `SELECT` only
-- Reject `INSERT`
-- Reject `UPDATE`
-- Reject `DELETE`
-- Reject `DROP`
-- Reject `ALTER`
-- Reject `TRUNCATE`
-- Enforce `LIMIT` with a default of `100`
-- Enforce query timeout with a maximum of `5` seconds
-- Enforce maximum result size
-- Reject multi-statement SQL
-- Reject SQL comments
+- no `INSERT`, `UPDATE`, `DELETE`
+- no `DROP`, `ALTER`, `TRUNCATE`
+- limited results (`LIMIT 100`)
+- timeout enforced (max 5s)
+- no multi-statement queries
+- no SQL comments
 
-These rules should never be bypassed.
+👉 **These rules cannot be bypassed.**
 
-Schema metadata calls such as `list_tables`, `describe_table`, and `list_relationships` are cached briefly in-memory to avoid repeated catalog queries during the same client session.
+---
 
-## Available MCP Tools
+## ⚡ Available Tools
 
 - `list_tables`
 - `describe_table`
 - `list_relationships`
-- `server_info`
 - `search_schema`
 - `run_readonly_query`
 - `explain_query`
 - `sample_rows`
+- `server_info`
 
-## Tool Matrix
+---
 
-| Tool                 | Purpose                                                      | Inputs                                                          | Guarded | Structured Output       |
-| -------------------- | ------------------------------------------------------------ | --------------------------------------------------------------- | ------- | ----------------------- |
-| `list_tables`        | List visible database tables with comments and row estimates | None                                                            | N/A     | `TableSummary[]`        |
-| `describe_table`     | Describe columns and types for one table                     | `name`, optional `schema`                                       | N/A     | `TableDescription`      |
-| `list_relationships` | List foreign key relationships                               | None                                                            | N/A     | `RelationshipSummary[]` |
-| `server_info`        | Return runtime server details for onboarding and diagnostics | None                                                            | N/A     | `ServerInfoResult`      |
-| `search_schema`      | Search table and column names across the schema              | `query`, optional `schema`, optional `limit`                    | N/A     | `SearchSchemaResult`    |
-| `run_readonly_query` | Execute a readonly `SELECT` query                            | `sql`                                                           | Yes     | `ReadonlyQueryResult`   |
-| `explain_query`      | Return JSON execution plan for a readonly query              | `sql`                                                           | Yes     | `ExplainQueryResult`    |
-| `sample_rows`        | Return a limited sample from a table                         | `name`, optional `schema`, optional `limit`, optional `columns` | Yes     | `ReadonlyQueryResult`   |
+## 🧠 Example
 
-## Structured Output
+```json
+{
+  "tool": "run_readonly_query",
+  "arguments": {
+    "sql": "SELECT * FROM users LIMIT 10"
+  }
+}
+```
 
-All tools return:
+---
 
-- `content` for a short human-readable summary
-- `structuredContent` for machine-friendly MCP client consumption
+## 🌐 Supported Databases
 
-For tool failures, `structuredContent` returns a standard error object with `ok: false`, plus `error.code` and `error.message`.
+```bash
+# PostgreSQL
+DATABASE_DIALECT=postgres
+DATABASE_URL=postgres://USER:PASSWORD@HOST:PORT/DB
 
-Detailed payload examples are available in [docs/tools.md](./docs/tools.md).
+# MySQL
+DATABASE_DIALECT=mysql
+DATABASE_URL=mysql://USER:PASSWORD@HOST:PORT/DB
 
-## Available MCP Resources
+# SQLite
+DATABASE_DIALECT=sqlite
+DATABASE_URL=file:/absolute/path/to/database.sqlite
+```
 
-- `schema://snapshot`
-- `schema://table/{name}`
+---
 
-Detailed resource payload examples are available in [docs/resources.md](./docs/resources.md).
+## ⚙️ Features
 
-## Install
+- MCP-native SQL access
+- multi-database support
+- strict read-only guardrails
+- schema discovery + introspection
+- structured output for AI agents
+- predictable execution limits
+- type-safe schemas
 
-Install the CLI globally from npm:
+---
+
+## 🧠 Use Cases
+
+- AI copilots querying databases
+- internal data assistants
+- analytics agents
+- safe DB access in automation
+- MCP-based workflows
+
+---
+
+## 📦 Install
 
 ```bash
 npm install -g ajan-sql
 ```
 
-Run it with a PostgreSQL, MySQL, or SQLite connection target:
+or:
 
 ```bash
-DATABASE_DIALECT=postgres \
-DATABASE_URL=postgres://USER:PASSWORD@HOST:PORT/DB ajan-sql
+npx ajan-sql
 ```
 
-MySQL example:
+---
 
-```bash
-DATABASE_DIALECT=mysql \
-DATABASE_URL=mysql://USER:PASSWORD@HOST:PORT/DB ajan-sql
-```
-
-SQLite example:
-
-```bash
-DATABASE_DIALECT=sqlite \
-DATABASE_URL=file:/absolute/path/to/database.sqlite ajan-sql
-```
-
-`DATABASE_DIALECT` defaults to `postgres`. Supported values today are `postgres`, `mysql`, and `sqlite`.
-
-Optional readonly guard env vars:
-
-- `AJAN_SQL_DEFAULT_LIMIT`
-- `AJAN_SQL_MAX_LIMIT`
-- `AJAN_SQL_TIMEOUT_MS`
-- `AJAN_SQL_MAX_RESULT_BYTES`
-
-These can only tighten the defaults. They cannot exceed the built-in hard caps of `LIMIT 100`, `5000ms`, and `1000000` bytes.
-
-## Local Development
-
-Start the server with a PostgreSQL, MySQL, or SQLite connection target:
-
-```bash
-DATABASE_DIALECT=postgres \
-DATABASE_URL=postgres://USER:PASSWORD@HOST:PORT/DB npm run dev
-```
-
-Or build and run the compiled server:
-
-```bash
-npm run build
-DATABASE_DIALECT=postgres \
-DATABASE_URL=postgres://USER:PASSWORD@HOST:PORT/DB npm start
-```
-
-SQLite development example:
-
-```bash
-DATABASE_DIALECT=sqlite \
-DATABASE_URL=file:/absolute/path/to/database.sqlite npm run dev
-```
-
-## Client Configuration
-
-For MCP clients that launch globally installed stdio servers:
+## 🧩 Client Example
 
 ```json
 {
   "mcpServers": {
     "ajan-sql": {
-      "command": "ajan-sql",
+      "command": "npx",
+      "args": ["ajan-sql"],
       "env": {
         "DATABASE_DIALECT": "postgres",
         "DATABASE_URL": "postgres://USER:PASSWORD@HOST:PORT/DB"
@@ -180,75 +168,29 @@ For MCP clients that launch globally installed stdio servers:
 }
 ```
 
-For repository-local development builds, point the command to the built CLI and provide `DATABASE_URL`:
+---
 
-```json
-{
-  "mcpServers": {
-    "ajan-sql": {
-      "command": "node",
-      "args": ["/absolute/path/to/ajan-sql/dist/index.js"],
-      "env": {
-        "DATABASE_DIALECT": "postgres",
-        "DATABASE_URL": "postgres://USER:PASSWORD@HOST:PORT/DB"
-      }
-    }
-  }
-}
-```
+## 💡 Philosophy
 
-For MySQL, set `DATABASE_DIALECT` to `mysql` and use a MySQL connection string. For SQLite, set `DATABASE_DIALECT` to `sqlite` and use a file URL such as `file:/absolute/path/to/database.sqlite`.
+> AI should never have unsafe database access.
 
-After the server is added, MCP clients can discover these tools and resources automatically:
+`ajan-sql` ensures queries are safe, predictable, and controlled.
 
-- `server_info`
-- `list_tables`
-- `describe_table`
-- `list_relationships`
-- `search_schema`
-- `run_readonly_query`
-- `explain_query`
-- `sample_rows`
-- `schema://snapshot`
-- `schema://table/{name}`
+---
 
-## Integration Testing
+## ❤️ Support
 
-The repository supports local integration testing during development, but any Docker compose files or seeded local test databases can remain untracked and machine-local.
+If this tool helps you:
 
-## Project Docs
+⭐ Star the repo  
+☕ Support via GitHub Sponsors
 
-- [Changelog](./CHANGELOG.md)
-- [Roadmap](./ROADMAP.md)
-- [Contributing](./CONTRIBUTING.md)
-- [Security Policy](./SECURITY.md)
+https://github.com/sponsors/borakilicoglu
 
-## Development Principles
+---
 
-- Keep functions small and composable
-- Avoid side effects
-- Route all DB logic through `db/`
-- Route all query execution through `query-runner`
-- Route all validation through `guard`
-- Prefer simple working code over abstraction
-- Prioritize correctness, safety, and clarity
+## 🔗 Links
 
-## CLI Behavior
-
-The CLI will:
-
-- Start the MCP server over stdio
-- Read `DATABASE_URL` from the environment
-- Fail fast if `DATABASE_URL` is missing
-
-## Status
-
-Early development. The CLI now supports PostgreSQL, MySQL, and SQLite through a shared dialect-based architecture, and the current package version is `0.1.9`.
-
-## Support
-
-If `ajan-sql` saves you time, helps you ship faster, or keeps a few risky queries out of trouble, you can support the project on GitHub Sponsors: [@borakilicoglu](https://github.com/sponsors/borakilicoglu)
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+- GitHub: https://github.com/borakilicoglu/ajan-sql
+- npm: https://www.npmjs.com/package/ajan-sql
+- Docs: https://borakilicoglu.github.io/ajan-sql/
