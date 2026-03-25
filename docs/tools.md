@@ -168,7 +168,7 @@ Returns lightweight runtime details that help MCP clients confirm the active ver
 ```json
 {
   "name": "ajan-sql",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "dialect": "postgres",
   "tools": ["server_info", "list_tables", "describe_table"],
   "resources": ["schema://snapshot", "schema://table/{name}"],

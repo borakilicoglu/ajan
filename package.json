@@ -1,6 +1,6 @@
 {
   "name": "ajan-sql",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "AI-safe MCP server for schema-aware, read-only SQL access.",
   "bin": {
     "ajan-sql": "dist/index.js"

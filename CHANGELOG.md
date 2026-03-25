@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1
+
+- Fixed TOON output packaging and CI compatibility
+- Replaced the previous dynamic import loader with a built-in deterministic TOON encoder
+- Removed the `@toon-format/toon` runtime dependency
+
 ## 0.2.0
 
 - Added embedded `text/toon` tool result content alongside `structuredContent`
