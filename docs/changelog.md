@@ -3,7 +3,7 @@
 ## 0.2.0
 
 - Added embedded `text/toon` tool result content alongside `structuredContent`
-- Added TOON encoding support via `@toon-format/toon`
+- Added deterministic TOON encoding support for tool result payloads
 - Updated README and tool contract docs for TOON output support
 - Refreshed README overview and MCP client setup guidance
 

@@ -49,7 +49,6 @@
   "type": "commonjs",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.18.0",
-    "@toon-format/toon": "^2.1.0",
     "better-sqlite3": "^12.8.0",
     "mysql2": "^3.20.0",
     "pg": "^8.16.3",
