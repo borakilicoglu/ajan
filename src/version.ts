@@ -1,1 +1,1 @@
-export const AJAN_SQL_VERSION = "0.2.1";
+export const AJAN_SQL_VERSION = "0.3.0";

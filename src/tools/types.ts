@@ -104,6 +104,14 @@ export type ServerInfoResult = {
     maxLimit: number;
     timeoutMs: number;
     maxResultBytes: number;
+    accessPolicy: {
+      allowedSchemas: string[];
+      allowedTables: string[];
+      deniedTables: string[];
+    };
+  };
+  audit: {
+    enabled: boolean;
   };
 };
 

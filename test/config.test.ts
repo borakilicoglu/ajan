@@ -21,6 +21,14 @@ describe("config", () => {
         maxLimit: 100,
         timeoutMs: 5000,
         maxResultBytes: 1000000,
+        accessPolicy: {
+          allowedSchemas: [],
+          allowedTables: [],
+          deniedTables: [],
+        },
+      },
+      audit: {
+        enabled: false,
       },
     });
   });
@@ -78,7 +86,40 @@ describe("config", () => {
       maxLimit: 50,
       timeoutMs: 1200,
       maxResultBytes: 4096,
+      accessPolicy: {
+        allowedSchemas: [],
+        allowedTables: [],
+        deniedTables: [],
+      },
     });
+  });
+
+  it("reads optional readonly access policy settings from the environment", () => {
+    vi.stubEnv("AJAN_SQL_ALLOWED_SCHEMAS", "public, analytics");
+    vi.stubEnv("AJAN_SQL_ALLOWED_TABLES", "public.users,orders");
+    vi.stubEnv("AJAN_SQL_DENIED_TABLES", "public.audit_logs");
+
+    expect(getReadonlyConfig().accessPolicy).toEqual({
+      allowedSchemas: ["public", "analytics"],
+      allowedTables: ["public.users", "orders"],
+      deniedTables: ["public.audit_logs"],
+    });
+  });
+
+  it("reads optional audit logging settings from the environment", () => {
+    vi.stubEnv("DATABASE_URL", "postgres://localhost/test");
+    vi.stubEnv("AJAN_SQL_AUDIT_LOG", "true");
+
+    expect(getAppConfig().audit).toEqual({
+      enabled: true,
+    });
+  });
+
+  it("rejects invalid audit logging settings", () => {
+    vi.stubEnv("DATABASE_URL", "postgres://localhost/test");
+    vi.stubEnv("AJAN_SQL_AUDIT_LOG", "yes");
+
+    expect(() => getAppConfig()).toThrow("AJAN_SQL_AUDIT_LOG must be true or false");
   });
 
   it("rejects readonly defaults above hard safety caps", () => {

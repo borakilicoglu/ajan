@@ -71,6 +71,21 @@ All queries are:
 
 ---
 
+## 🔒 Sandboxing & Approvals
+
+`ajan-sql` enforces sandboxing at the SQL access layer:
+
+- every query is validated before execution
+- query execution is readonly and bounded
+- results are limited by row count, timeout, and size
+- optional schema/table access policies can restrict readable tables
+
+Human approval flows are handled by the MCP host or client. `ajan-sql` does not provide its own approval UI.
+
+For production use, connect with a database user that only has readonly permissions. Database permissions should be the final safety backstop.
+
+---
+
 ## ⚡ Available Tools
 
 - `list_tables`
@@ -113,6 +128,15 @@ DATABASE_URL=mysql://USER:PASSWORD@HOST:PORT/DB
 # SQLite
 DATABASE_DIALECT=sqlite
 DATABASE_URL=file:/absolute/path/to/database.sqlite
+```
+
+Optional readonly policy controls:
+
+```bash
+AJAN_SQL_ALLOWED_SCHEMAS=public,analytics
+AJAN_SQL_ALLOWED_TABLES=public.users,analytics.events
+AJAN_SQL_DENIED_TABLES=public.audit_logs
+AJAN_SQL_AUDIT_LOG=true
 ```
 
 ---

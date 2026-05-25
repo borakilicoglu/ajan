@@ -130,6 +130,92 @@ describe("guardReadonlyQuery", () => {
     expect(result.timeoutMs).toBe(1200);
     expect(result.maxResultBytes).toBe(4096);
   });
+
+  it("allows queries that match an allowed schema policy", () => {
+    configureReadonlyDefaults({
+      accessPolicy: {
+        allowedSchemas: ["public"],
+        allowedTables: [],
+        deniedTables: [],
+      },
+    });
+
+    const result = guardReadonlyQuery("select * from public.users");
+
+    expect(result.sql).toBe("select * from public.users LIMIT 100");
+  });
+
+  it("rejects queries outside an allowed schema policy", () => {
+    configureReadonlyDefaults({
+      accessPolicy: {
+        allowedSchemas: ["analytics"],
+        allowedTables: [],
+        deniedTables: [],
+      },
+    });
+
+    expect(() => guardReadonlyQuery("select * from public.users")).toThrow(
+      "Table access denied by readonly policy: public.users",
+    );
+  });
+
+  it("allows queries that match an allowed table policy", () => {
+    configureReadonlyDefaults({
+      accessPolicy: {
+        allowedSchemas: [],
+        allowedTables: ["public.users"],
+        deniedTables: [],
+      },
+    });
+
+    const result = guardReadonlyQuery("select * from public.users");
+
+    expect(result.sql).toBe("select * from public.users LIMIT 100");
+  });
+
+  it("rejects queries outside an allowed table policy", () => {
+    configureReadonlyDefaults({
+      accessPolicy: {
+        allowedSchemas: [],
+        allowedTables: ["public.users"],
+        deniedTables: [],
+      },
+    });
+
+    expect(() => guardReadonlyQuery("select * from public.posts")).toThrow(
+      "Table access denied by readonly policy: public.posts",
+    );
+  });
+
+  it("rejects denied tables", () => {
+    configureReadonlyDefaults({
+      accessPolicy: {
+        allowedSchemas: [],
+        allowedTables: [],
+        deniedTables: ["public.audit_logs"],
+      },
+    });
+
+    expect(() => guardReadonlyQuery("select * from public.audit_logs")).toThrow(
+      "Table access denied by readonly policy: public.audit_logs",
+    );
+  });
+
+  it("applies table policy checks to joins", () => {
+    configureReadonlyDefaults({
+      accessPolicy: {
+        allowedSchemas: ["public"],
+        allowedTables: [],
+        deniedTables: ["public.secrets"],
+      },
+    });
+
+    expect(() =>
+      guardReadonlyQuery(
+        "select users.id from public.users join public.secrets on secrets.user_id = users.id",
+      ),
+    ).toThrow("Table access denied by readonly policy: public.secrets");
+  });
 });
 
 describe("quoteIdentifier", () => {

@@ -1,5 +1,6 @@
 import type Database from "better-sqlite3";
 
+import { auditQueryEvent } from "../audit";
 import type {
   ColumnReference,
   ColumnSummary,
@@ -185,45 +186,82 @@ function runSqliteReadonlyQuery(
   sql: string,
   options: ReadonlyGuardOptions = {},
 ): ReadonlyQueryResult {
-  const guarded = guardReadonlyQuery(sql, options);
-  const startedAt = Date.now();
-  const statement = database.prepare(guarded.sql);
-  const rows = statement.all() as JsonRecord[];
-  const columns = statement
-    .columns()
-    .map((column: Database.ColumnDefinition, index: number) => ({
-      name: column.name,
-      dataTypeId: index,
-    })) satisfies QueryColumn[];
+  try {
+    const guarded = guardReadonlyQuery(sql, options);
+    const startedAt = Date.now();
+    const statement = database.prepare(guarded.sql);
+    const rows = statement.all() as JsonRecord[];
+    const columns = statement
+      .columns()
+      .map((column: Database.ColumnDefinition, index: number) => ({
+        name: column.name,
+        dataTypeId: index,
+      })) satisfies QueryColumn[];
+    const durationMs = Date.now() - startedAt;
 
-  assertRowCount(rows.length, guarded.limit);
-  assertResultSize(rows, guarded.maxResultBytes);
+    assertRowCount(rows.length, guarded.limit);
+    assertResultSize(rows, guarded.maxResultBytes);
+    auditQueryEvent({
+      operation: "run_readonly_query",
+      status: "allowed",
+      sql,
+      guardedSql: guarded.sql,
+      durationMs,
+      rowCount: rows.length,
+    });
 
-  return {
-    sql: guarded.sql,
-    rowCount: rows.length,
-    durationMs: Date.now() - startedAt,
-    columns,
-    rows,
-  };
+    return {
+      sql: guarded.sql,
+      rowCount: rows.length,
+      durationMs,
+      columns,
+      rows,
+    };
+  } catch (error) {
+    auditQueryEvent({
+      operation: "run_readonly_query",
+      status: "rejected",
+      sql,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    throw error;
+  }
 }
 
 function explainSqliteReadonlyQuery(
   database: SqliteDatabase,
   sql: string,
 ): ExplainQueryResult {
-  const guarded = guardReadonlyQuery(sql);
-  const startedAt = Date.now();
-  const plan = database
-    .prepare(`EXPLAIN QUERY PLAN ${guarded.sql}`)
-    .all() as Array<{ detail?: string }>;
+  try {
+    const guarded = guardReadonlyQuery(sql);
+    const startedAt = Date.now();
+    const plan = database
+      .prepare(`EXPLAIN QUERY PLAN ${guarded.sql}`)
+      .all() as Array<{ detail?: string }>;
+    const durationMs = Date.now() - startedAt;
+    auditQueryEvent({
+      operation: "explain_query",
+      status: "allowed",
+      sql,
+      guardedSql: guarded.sql,
+      durationMs,
+    });
 
-  return {
-    sql: guarded.sql,
-    durationMs: Date.now() - startedAt,
-    summary: summarizeSqliteExplainPlan(plan),
-    plan,
-  };
+    return {
+      sql: guarded.sql,
+      durationMs,
+      summary: summarizeSqliteExplainPlan(plan),
+      plan,
+    };
+  } catch (error) {
+    auditQueryEvent({
+      operation: "explain_query",
+      status: "rejected",
+      sql,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    throw error;
+  }
 }
 
 function sampleSqliteRows(

@@ -284,6 +284,14 @@ describe("createAjanServer", () => {
         maxLimit: 100,
         timeoutMs: 5000,
         maxResultBytes: 1000000,
+        accessPolicy: {
+          allowedSchemas: [],
+          allowedTables: [],
+          deniedTables: [],
+        },
+      },
+      audit: {
+        enabled: false,
       },
     });
   });

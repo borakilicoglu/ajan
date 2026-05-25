@@ -1,5 +1,6 @@
 import type { FieldDef, QueryResultRow } from "pg";
 
+import { auditQueryEvent } from "../audit";
 import type { DbPool } from "../db/pool";
 import { describeTable } from "../db/schema";
 import {
@@ -45,36 +46,71 @@ export async function runReadonlyQuery(
   sql: string,
   options: ReadonlyGuardOptions = {},
 ): Promise<ReadonlyQueryResult> {
-  const guarded = guardReadonlyQuery(sql, options);
-  const result = await executeWithReadonlySettings(pool, guarded.sql, guarded.timeoutMs);
+  try {
+    const guarded = guardReadonlyQuery(sql, options);
+    const result = await executeWithReadonlySettings(pool, guarded.sql, guarded.timeoutMs);
 
-  assertRowCount(result.rows.length, guarded.limit);
-  assertResultSize(result.rows, guarded.maxResultBytes);
+    assertRowCount(result.rows.length, guarded.limit);
+    assertResultSize(result.rows, guarded.maxResultBytes);
+    auditQueryEvent({
+      operation: "run_readonly_query",
+      status: "allowed",
+      sql,
+      guardedSql: guarded.sql,
+      durationMs: result.durationMs,
+      rowCount: result.rows.length,
+    });
 
-  return {
-    sql: guarded.sql,
-    rowCount: result.rows.length,
-    durationMs: result.durationMs,
-    columns: result.fields.map(toQueryColumn),
-    rows: result.rows as JsonRecord[],
-  };
+    return {
+      sql: guarded.sql,
+      rowCount: result.rows.length,
+      durationMs: result.durationMs,
+      columns: result.fields.map(toQueryColumn),
+      rows: result.rows as JsonRecord[],
+    };
+  } catch (error) {
+    auditQueryEvent({
+      operation: "run_readonly_query",
+      status: "rejected",
+      sql,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    throw error;
+  }
 }
 
 export async function explainReadonlyQuery(
   pool: DbPool,
   sql: string,
 ): Promise<ExplainQueryResult> {
-  const guarded = guardReadonlyQuery(sql);
-  const explainSql = `EXPLAIN (FORMAT JSON) ${guarded.sql}`;
-  const result = await executeWithReadonlySettings(pool, explainSql, guarded.timeoutMs);
-  const plan = result.rows[0]?.["QUERY PLAN"];
+  try {
+    const guarded = guardReadonlyQuery(sql);
+    const explainSql = `EXPLAIN (FORMAT JSON) ${guarded.sql}`;
+    const result = await executeWithReadonlySettings(pool, explainSql, guarded.timeoutMs);
+    const plan = result.rows[0]?.["QUERY PLAN"];
+    auditQueryEvent({
+      operation: "explain_query",
+      status: "allowed",
+      sql,
+      guardedSql: guarded.sql,
+      durationMs: result.durationMs,
+    });
 
-  return {
-    sql: guarded.sql,
-    durationMs: result.durationMs,
-    summary: summarizeExplainPlan(plan),
-    plan,
-  };
+    return {
+      sql: guarded.sql,
+      durationMs: result.durationMs,
+      summary: summarizeExplainPlan(plan),
+      plan,
+    };
+  } catch (error) {
+    auditQueryEvent({
+      operation: "explain_query",
+      status: "rejected",
+      sql,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    throw error;
+  }
 }
 
 export async function sampleRows(

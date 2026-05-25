@@ -1,5 +1,6 @@
 import type { FieldPacket, PoolConnection, Pool as MysqlPool, RowDataPacket } from "mysql2/promise";
 
+import { auditQueryEvent } from "../audit";
 import type {
   ColumnReference,
   ColumnSummary,
@@ -157,40 +158,75 @@ async function runMysqlReadonlyQuery(
   sql: string,
   options: ReadonlyGuardOptions = {},
 ): Promise<ReadonlyQueryResult> {
-  const guarded = guardReadonlyQuery(sql, options);
-  const result = await executeMysqlReadonly(pool, guarded.sql, guarded.timeoutMs);
+  try {
+    const guarded = guardReadonlyQuery(sql, options);
+    const result = await executeMysqlReadonly(pool, guarded.sql, guarded.timeoutMs);
 
-  assertRowCount(result.rows.length, guarded.limit);
-  assertResultSize(result.rows, guarded.maxResultBytes);
+    assertRowCount(result.rows.length, guarded.limit);
+    assertResultSize(result.rows, guarded.maxResultBytes);
+    auditQueryEvent({
+      operation: "run_readonly_query",
+      status: "allowed",
+      sql,
+      guardedSql: guarded.sql,
+      durationMs: result.durationMs,
+      rowCount: result.rows.length,
+    });
 
-  return {
-    sql: guarded.sql,
-    rowCount: result.rows.length,
-    durationMs: result.durationMs,
-    columns: result.fields.map(toMysqlQueryColumn),
-    rows: result.rows,
-  };
+    return {
+      sql: guarded.sql,
+      rowCount: result.rows.length,
+      durationMs: result.durationMs,
+      columns: result.fields.map(toMysqlQueryColumn),
+      rows: result.rows,
+    };
+  } catch (error) {
+    auditQueryEvent({
+      operation: "run_readonly_query",
+      status: "rejected",
+      sql,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    throw error;
+  }
 }
 
 async function explainMysqlReadonlyQuery(
   pool: MysqlPool,
   sql: string,
 ): Promise<ExplainQueryResult> {
-  const guarded = guardReadonlyQuery(sql);
-  const result = await executeMysqlReadonly(
-    pool,
-    `EXPLAIN FORMAT=JSON ${guarded.sql}`,
-    guarded.timeoutMs,
-  );
-  const rawPlan = result.rows[0]?.EXPLAIN;
-  const plan = typeof rawPlan === "string" ? safeParseJson(rawPlan) : rawPlan;
+  try {
+    const guarded = guardReadonlyQuery(sql);
+    const result = await executeMysqlReadonly(
+      pool,
+      `EXPLAIN FORMAT=JSON ${guarded.sql}`,
+      guarded.timeoutMs,
+    );
+    const rawPlan = result.rows[0]?.EXPLAIN;
+    const plan = typeof rawPlan === "string" ? safeParseJson(rawPlan) : rawPlan;
+    auditQueryEvent({
+      operation: "explain_query",
+      status: "allowed",
+      sql,
+      guardedSql: guarded.sql,
+      durationMs: result.durationMs,
+    });
 
-  return {
-    sql: guarded.sql,
-    durationMs: result.durationMs,
-    summary: summarizeMysqlExplainPlan(plan),
-    plan,
-  };
+    return {
+      sql: guarded.sql,
+      durationMs: result.durationMs,
+      summary: summarizeMysqlExplainPlan(plan),
+      plan,
+    };
+  } catch (error) {
+    auditQueryEvent({
+      operation: "explain_query",
+      status: "rejected",
+      sql,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    throw error;
+  }
 }
 
 async function sampleMysqlRows(

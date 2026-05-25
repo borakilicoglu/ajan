@@ -1,5 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
+import { getQueryAuditConfig } from "../audit";
 import { getReadonlyDefaults } from "../guard";
 import { AJAN_SQL_VERSION } from "../version";
 import type { DatabaseDialect } from "../dialects/types";
@@ -115,6 +116,7 @@ function classifyToolError(error: unknown): ToolError {
     message === "Only SELECT queries are allowed" ||
     message === "LIMIT ALL is not allowed" ||
     message.startsWith("Blocked SQL keyword detected:") ||
+    message.startsWith("Table access denied by readonly policy:") ||
     message.startsWith("Query LIMIT exceeds maximum allowed value of")
   ) {
     return {
@@ -175,6 +177,7 @@ function registerServerInfoTool(registerTool: RegisterTool, deps: SchemaToolDeps
     },
     withToolErrorHandling(TOOL_NAMES.serverInfo, async () => {
       const readonly = getReadonlyDefaults();
+      const audit = getQueryAuditConfig();
       const result: ServerInfoResult = {
         name: "ajan-sql",
         version: AJAN_SQL_VERSION,
@@ -185,6 +188,7 @@ function registerServerInfoTool(registerTool: RegisterTool, deps: SchemaToolDeps
           "schema://table/{name}",
         ],
         readonly,
+        audit,
       };
 
       return asStructuredResult(

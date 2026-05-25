@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0
+
+- Added optional readonly schema/table access policy controls
+- Added stderr JSON audit logging for readonly query execution and rejection events
+- Documented sandboxing, approval responsibility, readonly DB user guidance, and policy env vars
+
 ## 0.2.1
 
 - Fixed TOON output packaging and CI compatibility

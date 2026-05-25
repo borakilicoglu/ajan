@@ -1,6 +1,10 @@
 ## What's Changed
 
-- Added `server_info` for lightweight runtime diagnostics and MCP client onboarding
-- Added `search_schema` to search table and column names across the active schema
-- Moved server versioning to a shared runtime constant and bumped the package to `0.1.9`
-- Expanded tests and documentation for the new MCP tool contracts
+- Added optional readonly schema/table access policy controls:
+  - `AJAN_SQL_ALLOWED_SCHEMAS`
+  - `AJAN_SQL_ALLOWED_TABLES`
+  - `AJAN_SQL_DENIED_TABLES`
+- Added `AJAN_SQL_AUDIT_LOG=true` for stderr JSON audit events
+- Exposed active access policy and audit settings through `server_info`
+- Documented sandboxing, approvals, readonly DB user guidance, and policy configuration
+- Bumped the package to `0.3.0`

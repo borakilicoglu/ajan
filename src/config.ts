@@ -12,6 +12,17 @@ export type ReadonlyConfig = {
   maxLimit: number;
   timeoutMs: number;
   maxResultBytes: number;
+  accessPolicy: ReadonlyAccessPolicyConfig;
+};
+
+export type ReadonlyAccessPolicyConfig = {
+  allowedSchemas: string[];
+  allowedTables: string[];
+  deniedTables: string[];
+};
+
+export type AuditConfig = {
+  enabled: boolean;
 };
 
 export type AppConfig = {
@@ -19,6 +30,7 @@ export type AppConfig = {
   databaseDialect: DatabaseDialectName;
   dbPoolMax: number;
   readonly: ReadonlyConfig;
+  audit: AuditConfig;
 };
 
 export function getRequiredEnv(name: string): string {
@@ -37,6 +49,7 @@ export function getAppConfig(): AppConfig {
     databaseDialect: getDatabaseDialect(),
     dbPoolMax: DEFAULT_DB_POOL_MAX,
     readonly: getReadonlyConfig(),
+    audit: getAuditConfig(),
   };
 }
 
@@ -68,6 +81,17 @@ export function getReadonlyConfig(): ReadonlyConfig {
     maxLimit,
     timeoutMs,
     maxResultBytes,
+    accessPolicy: {
+      allowedSchemas: getOptionalListEnv("AJAN_SQL_ALLOWED_SCHEMAS"),
+      allowedTables: getOptionalListEnv("AJAN_SQL_ALLOWED_TABLES"),
+      deniedTables: getOptionalListEnv("AJAN_SQL_DENIED_TABLES"),
+    },
+  };
+}
+
+export function getAuditConfig(): AuditConfig {
+  return {
+    enabled: getOptionalBooleanEnv("AJAN_SQL_AUDIT_LOG") ?? false,
   };
 }
 
@@ -105,4 +129,35 @@ function getOptionalPositiveIntegerEnv(name: string): number | null {
   }
 
   return value;
+}
+
+function getOptionalListEnv(name: string): string[] {
+  const rawValue = process.env[name]?.trim();
+
+  if (!rawValue) {
+    return [];
+  }
+
+  return rawValue
+    .split(",")
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+function getOptionalBooleanEnv(name: string): boolean | null {
+  const rawValue = process.env[name]?.trim().toLowerCase();
+
+  if (!rawValue) {
+    return null;
+  }
+
+  if (rawValue === "true" || rawValue === "1") {
+    return true;
+  }
+
+  if (rawValue === "false" || rawValue === "0") {
+    return false;
+  }
+
+  throw new Error(`${name} must be true or false`);
 }
